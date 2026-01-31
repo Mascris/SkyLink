@@ -6,5 +6,5 @@ git add .
 echo "commit message to git"
 git commit -m "Still working"
 
-git push
+git push -f
 echo "pushed succesfully"
