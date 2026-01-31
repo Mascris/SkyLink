@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { StatsCards } from "@/components/dashboard/stats-cards"
@@ -24,6 +24,40 @@ import { AddShipmentView } from "@/components/dashboard/views/add-shipment-view"
 type StatusFilter = "in-transit" | "delivered" | "pending" | "delayed" | null
 
 export default function DashboardContent() {
+    // --- LIVE DATA FETCHING LOGIC ---
+    const [shipments, setShipments] = useState<Shipment[]>([])
+    const [loading, setLoading] = useState(true)
+
+useEffect(() => {
+    console.log("⚓ Pulse Started"); 
+
+    const fetchData = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/api/shipments/active");
+            if (!response.ok) throw new Error("Backend offline");
+            const data = await response.json();
+            
+            console.log("📦 Data Received:", data.length, "shipments");
+            setShipments(data); 
+        } catch (err) {
+            console.error("📡 Signal Lost:", err);
+        }
+    };
+
+    fetchData(); 
+    const interval = setInterval(fetchData, 3000); // 3 seconds
+    return () => clearInterval(interval);
+    }, []);
+    const stats = useMemo(() => {
+        return {
+            total: shipments.length,
+            inTransit: shipments.filter(s => s.status === 'TRANSIT').length,
+            delivered: shipments.filter(s => s.status === 'DELIVERED').length,
+            pending: shipments.filter(s => s.status === 'IN_QUEUE').length
+        }
+    }, [shipments])
+
+    // --- ORIGINAL V0 STATES ---
     const [activeView, setActiveView] = useState("overview")
     const [showNotifications, setShowNotifications] = useState(false)
     const [showCommandPalette, setShowCommandPalette] = useState(false)
@@ -33,6 +67,7 @@ export default function DashboardContent() {
     const [statusFilter, setStatusFilter] = useState<StatusFilter>(null)
     const [toasts, setToasts] = useState<Toast[]>([])
 
+    // --- ORIGINAL V0 HANDLERS ---
     const addToast = useCallback((type: Toast["type"], title: string, description?: string) => {
         const id = Date.now().toString()
         setToasts((prev) => [...prev, { id, type, title, description }])
@@ -42,28 +77,21 @@ export default function DashboardContent() {
         setToasts((prev) => prev.filter((t) => t.id !== id))
     }, [])
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts logic (restored)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Command palette: Cmd/Ctrl + K
             if ((e.metaKey || e.ctrlKey) && e.key === "k") {
                 e.preventDefault()
                 setShowCommandPalette(true)
             }
-
-            // New shipment: Cmd/Ctrl + Shift + N
             if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "N") {
                 e.preventDefault()
                 setActiveView("add-shipment")
             }
-
-            // Notifications: Cmd/Ctrl + Shift + .
             if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === ".") {
                 e.preventDefault()
                 setShowNotifications(true)
             }
-
-            // Help / shortcuts: ?
             if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
                 const target = e.target as HTMLElement
                 if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") {
@@ -71,25 +99,12 @@ export default function DashboardContent() {
                     setShowKeyboardShortcuts(true)
                 }
             }
-
-            // Escape to close modals
             if (e.key === "Escape") {
                 setShowCommandPalette(false)
                 setShowNotifications(false)
                 setShowActivityFeed(false)
                 setShowKeyboardShortcuts(false)
                 setSelectedShipment(null)
-            }
-
-            if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-                const target = e.target as HTMLElement
-                if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") {
-                    const views = ["overview", "add-shipment", "shipments", "fleet", "tracking", "analytics", "customers", "reports"]
-                    const num = parseInt(e.key)
-                    if (num >= 1 && num <= views.length) {
-                        setActiveView(views[num - 1])
-                    }
-                }
             }
         }
 
@@ -116,19 +131,19 @@ export default function DashboardContent() {
         }
     }
 
-
+    // --- RENDER LOGIC (NOW INJECTED WITH LIVE DATA) ---
     const renderMainContent = () => {
         switch (activeView) {
             case "add-shipment":
                 return <AddShipmentView />
             case "shipments":
-                return <ShipmentsView />
+                return <ShipmentsView shipments={shipments} />
             case "fleet":
-                return <FleetView />
+                return <FleetView shipments={shipments} />
             case "tracking":
-                return <TrackingView />
+                return <TrackingView shipments={shipments} />
             case "analytics":
-                return <AnalyticsView />
+                return <AnalyticsView shipments={shipments} />
             case "customers":
                 return <CustomersView />
             case "reports":
@@ -138,10 +153,15 @@ export default function DashboardContent() {
             default:
                 return (
                     <div className="space-y-6 animate-in fade-in duration-300">
-                        <StatsCards onFilterClick={handleFilterClick} activeFilter={statusFilter} />
+                        <StatsCards 
+                            onFilterClick={handleFilterClick} 
+                            activeFilter={statusFilter} 
+                            stats={stats} 
+                        />
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                            <WorldMap />
+                            <WorldMap shipments={shipments} />
                             <ShipmentsList
+                                apiShipments={shipments}
                                 onShipmentClick={handleShipmentClick}
                                 filterStatus={statusFilter}
                             />
@@ -167,7 +187,7 @@ export default function DashboardContent() {
     }
 
     return (
-        <div className="flex h-screen bg-background">
+        <div className="flex h-screen bg-background text-foreground">
             <Sidebar
                 activeView={activeView}
                 onViewChange={handleViewChange}
@@ -185,12 +205,19 @@ export default function DashboardContent() {
                     title={getViewTitle()}
                 />
 
-                <main className="flex-1 overflow-auto p-6">
+                <main className="flex-1 overflow-auto p-6 relative">
                     {renderMainContent()}
+                    
+                    {/* Live Indicator Overlay */}
+                    {!loading && (
+                        <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-green-500/30 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                            <span className="text-[10px] font-mono text-green-500 uppercase tracking-tighter">Live Connection Established</span>
+                        </div>
+                    )}
                 </main>
             </div>
 
-            {/* Modals and Overlays */}
             <ShipmentModal
                 shipment={selectedShipment}
                 isOpen={!!selectedShipment}
@@ -221,8 +248,6 @@ export default function DashboardContent() {
                 onClose={() => setShowKeyboardShortcuts(false)}
             />
 
-
-            {/* Toast Notifications */}
             <div className="fixed bottom-4 right-4 z-50 space-y-2">
                 {toasts.map((toast) => (
                     <ToastNotification key={toast.id} {...toast} onClose={removeToast} />

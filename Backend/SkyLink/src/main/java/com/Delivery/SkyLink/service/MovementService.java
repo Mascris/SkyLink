@@ -20,7 +20,7 @@ public class MovementService {
   private final ShipmentRepository shipmentRepository;
   private final HubRepository hubRepository;
 
-  @Scheduled(fixedRate = 13000)
+  @Scheduled(fixedRate = 32000)
   public void moveShipments() {
     List<Shipment> queued = shipmentRepository.findByStatus("IN_QUEUE");
 
@@ -47,15 +47,26 @@ public class MovementService {
   }
 
   private void updateCoordinates(Shipment s) {
-    Hub origin = hubRepository.findById(s.getCurrentHub()).orElse(null);
-    Hub destination = hubRepository.findById(s.getDestinationHub()).orElse(null);
+    String[] path = s.getRoutePathJson().split(",");
+
+    int totalLegs = path.length - 1;
+    double globalProgress = s.getProgressPercent() / 100.0;
+
+    int currentLegIndex = (int) (globalProgress * totalLegs);
+    if (currentLegIndex >= totalLegs)
+      currentLegIndex = totalLegs - 1;
+
+    String startHubCode = path[currentLegIndex];
+    String endHubCode = path[currentLegIndex + 1];
+
+    Hub origin = hubRepository.findById(startHubCode).orElse(null);
+    Hub destination = hubRepository.findById(endHubCode).orElse(null);
 
     if (origin != null && destination != null) {
-      double pct = s.getProgressPercent() / 100.0;
+      double legProgress = (globalProgress * totalLegs) - currentLegIndex;
 
-      double currentLat = origin.getLatitude() + (destination.getLatitude() - origin.getLatitude()) * pct;
-
-      double currentLng = origin.getLongtitude() + (destination.getLongtitude() - origin.getLongtitude()) * pct;
+      double currentLat = origin.getLatitude() + (destination.getLatitude() - origin.getLatitude()) * legProgress;
+      double currentLng = origin.getLongtitude() + (destination.getLongtitude() - origin.getLongtitude()) * legProgress;
 
       s.setCurrentLat(currentLat);
       s.setCurrentLng(currentLng);

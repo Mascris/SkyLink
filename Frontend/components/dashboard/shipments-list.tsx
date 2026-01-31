@@ -6,222 +6,147 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { type ApiShipment } from "./dashboard-content"
 
-import { fetchActiveShipments, type Shipment as ApiShipment } from "@/lib/api"
-
-type ShipmentStatus = "in-transit" | "delivered" | "pending" | "delayed"
-
-export interface Shipment {
-  id: string
-  origin: string
-  destination: string
-  status: ShipmentStatus
-  eta: string
-  carrier: string
-  weight: string
-}
-
-
-
-const statusConfig: Record<ShipmentStatus, { label: string; icon: React.ElementType; className: string }> = {
-  "in-transit": {
+// Map Java Backend Statuses to UI Labels and Colors
+const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
+  "TRANSIT": {
     label: "In Transit",
     icon: Truck,
-    className: "bg-info/15 text-info border-info/30",
+    className: "bg-blue-500/15 text-blue-500 border-blue-500/30",
   },
-  delivered: {
+  "DELIVERED": {
     label: "Delivered",
     icon: CheckCircle,
-    className: "bg-success/15 text-success border-success/30",
+    className: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
   },
-  pending: {
+  "IN_QUEUE": {
     label: "Pending",
     icon: Clock,
-    className: "bg-warning/15 text-warning border-warning/30",
+    className: "bg-amber-500/15 text-amber-500 border-amber-500/30",
   },
-  delayed: {
+  "DELAYED": {
     label: "Delayed",
     icon: AlertCircle,
-    className: "bg-destructive/15 text-destructive border-destructive/30",
+    className: "bg-red-500/15 text-red-500 border-red-500/30",
   },
 }
 
-const statusOptions: ShipmentStatus[] = ["in-transit", "delivered", "pending", "delayed"]
-
 interface ShipmentsListProps {
-  onShipmentClick: (shipment: Shipment) => void
-  filterStatus?: ShipmentStatus | null
+  apiShipments: ApiShipment[]
+  onShipmentClick: (shipment: any) => void
+  filterStatus?: string | null
 }
 
-export function ShipmentsList({ onShipmentClick, filterStatus }: ShipmentsListProps) {
-  const [shipments, setShipments] = useState<Shipment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus }: ShipmentsListProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [showFilters, setShowFilters] = useState(false)
-  const [selectedStatuses, setSelectedStatuses] = useState<ShipmentStatus[]>(
-    filterStatus ? [filterStatus] : []
-  )
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
 
-  React.useEffect(() => {
-    const loadShipments = async () => {
-      try {
-        const data = await fetchActiveShipments()
-        const mappedShipments: Shipment[] = data.map((s: ApiShipment) => ({
-          id: s.shipmentId,
-          origin: s.currentHub, // Using currentHub as origin for now as per data availability
-          destination: s.destinationHub,
-          status: s.status.toLowerCase() as ShipmentStatus,
-          eta: new Date(s.createdAt).toLocaleDateString(), // Placeholder for ETA
-          carrier: "SkyLink Logistics", // Placeholder
-          weight: "N/A", // Placeholder
-        }))
-        setShipments(mappedShipments)
-        setLoading(false)
-      } catch (err) {
-        setError("Failed to load shipments")
-        setLoading(false)
-      }
-    }
-    loadShipments()
-  }, [])
-
-  // Update filter when external filterStatus changes
+  // Update internal filter if external filter (from StatsCards) changes
   React.useEffect(() => {
     if (filterStatus) {
-      setSelectedStatuses([filterStatus])
+      setSelectedStatuses([filterStatus.toUpperCase()])
+    } else {
+      setSelectedStatuses([])
     }
   }, [filterStatus])
 
+  // Filter the live data from Java
   const filteredShipments = useMemo(() => {
-    return shipments.filter((shipment) => {
-      // Search filter
+    if (!Array.isArray(apiShipments)) return [];
+    return apiShipments.filter((s) => {
+      const searchLower = searchQuery.toLowerCase()
       const matchesSearch = searchQuery === "" ||
-        shipment.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        shipment.origin.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        shipment.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        shipment.carrier.toLowerCase().includes(searchQuery.toLowerCase())
+        s.shipmentId.toLowerCase().includes(searchLower) ||
+        s.label.toLowerCase().includes(searchLower) ||
+        (s.consumerName && s.consumerName.toLowerCase().includes(searchLower))
 
-      // Status filter
       const matchesStatus = selectedStatuses.length === 0 ||
-        selectedStatuses.includes(shipment.status)
+        selectedStatuses.includes(s.status)
 
       return matchesSearch && matchesStatus
     })
-  }, [searchQuery, selectedStatuses])
+  }, [apiShipments, searchQuery, selectedStatuses])
 
-  const toggleStatus = (status: ShipmentStatus) => {
+  const toggleStatus = (status: string) => {
     setSelectedStatuses(prev =>
-      prev.includes(status)
-        ? prev.filter(s => s !== status)
-        : [...prev, status]
+      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
     )
   }
 
-  const clearFilters = () => {
-    setSelectedStatuses([])
-    setSearchQuery("")
-  }
-
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col border-slate-800 bg-slate-950/50 backdrop-blur-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Active Shipments</CardTitle>
-          <span className="text-sm text-muted-foreground">
-            {loading ? "Loading..." : `${filteredShipments.length} of ${shipments.length}`}
+          <div>
+            <CardTitle className="text-lg font-semibold text-white">Live Logistics Ledger</CardTitle>
+            <p className="text-xs text-slate-500 font-mono mt-1">REAL-TIME DATA STREAM ACTIVE</p>
+          </div>
+          <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20">
+            {apiShipments ? filteredShipments.length : 0} Active
           </span>
         </div>
+        
         <div className="flex items-center gap-2 mt-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <Input
-              placeholder="Search shipments..."
-              className="pl-9 bg-secondary border-border"
+              placeholder="Search by ID, Cargo or Customer..."
+              className="pl-9 bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-600"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
           </div>
           <Button
             variant="outline"
             size="icon"
-            className={cn(
-              "shrink-0 bg-transparent",
-              showFilters && "bg-secondary"
-            )}
+            className={cn("border-slate-800 bg-slate-900 hover:bg-slate-800", showFilters && "border-blue-500")}
             onClick={() => setShowFilters(!showFilters)}
           >
-            <Filter className="w-4 h-4" />
-            <span className="sr-only">Filter shipments</span>
+            <Filter className="w-4 h-4 text-slate-400" />
           </Button>
         </div>
 
-        {/* Filter Panel */}
         {showFilters && (
-          <div className="mt-3 p-3 rounded-lg bg-secondary/50 border border-border">
+          <div className="mt-3 p-3 rounded-lg bg-slate-900/80 border border-slate-800 animate-in slide-in-from-top-2">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-muted-foreground">Filter by Status</p>
-              {selectedStatuses.length > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Clear all
-                </button>
-              )}
+              <p className="text-[10px] font-bold text-slate-500 uppercase">System Filters</p>
+              <button onClick={() => setSelectedStatuses([])} className="text-[10px] text-blue-400 hover:underline">Clear</button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {statusOptions.map((status) => {
-                const config = statusConfig[status]
-                const isSelected = selectedStatuses.includes(status)
-                return (
-                  <button
-                    key={status}
-                    onClick={() => toggleStatus(status)}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors",
-                      isSelected ? config.className : "border-border text-muted-foreground hover:border-muted-foreground"
-                    )}
-                  >
-                    {config.label}
-                    {isSelected && <X className="w-3 h-3" />}
-                  </button>
-                )
-              })}
+              {Object.keys(statusConfig).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => toggleStatus(status)}
+                  className={cn(
+                    "px-2.5 py-1 text-[10px] font-bold rounded-md border transition-all",
+                    selectedStatuses.includes(status) 
+                      ? "bg-blue-600 border-blue-400 text-white" 
+                      : "bg-slate-800 border-slate-700 text-slate-400"
+                  )}
+                >
+                  {status}
+                </button>
+              ))}
             </div>
           </div>
         )}
       </CardHeader>
+
       <CardContent className="flex-1 overflow-auto px-4 pb-4">
         {filteredShipments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <Package className="w-12 h-12 text-muted-foreground/30 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No shipments found</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Try adjusting your search or filters</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4 bg-transparent"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </Button>
+          <div className="flex flex-col items-center justify-center h-full py-12 opacity-50">
+            <Package className="w-10 h-10 mb-2" />
+            <p className="text-sm font-mono">No Shipments Found in Current Radius</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredShipments.map((shipment) => (
-              <ShipmentCard
-                key={shipment.id}
-                shipment={shipment}
-                onClick={() => onShipmentClick(shipment)}
+            {filteredShipments.map((s) => (
+              <ShipmentRow
+                key={s.shipmentId}
+                shipment={s}
+                onClick={() => onShipmentClick(s)}
               />
             ))}
           </div>
@@ -231,53 +156,56 @@ export function ShipmentsList({ onShipmentClick, filterStatus }: ShipmentsListPr
   )
 }
 
-interface ShipmentCardProps {
-  shipment: Shipment
-  onClick: () => void
-}
-
-function ShipmentCard({ shipment, onClick }: ShipmentCardProps) {
-  const config = statusConfig[shipment.status]
+function ShipmentRow({ shipment, onClick }: { shipment: ApiShipment; onClick: () => void }) {
+  const config = statusConfig[shipment.status] || statusConfig["IN_QUEUE"]
   const StatusIcon = config.icon
 
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-4 rounded-lg bg-secondary/50 border border-border hover:bg-secondary hover:border-border/80 transition-all group"
+      className="w-full text-left p-4 rounded-xl bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/50 hover:bg-slate-900/80 transition-all group relative overflow-hidden"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted shrink-0">
-            <Package className="w-5 h-5 text-muted-foreground" />
+      {/* Background Progress Glow */}
+      <div 
+        className="absolute bottom-0 left-0 h-[2px] bg-blue-500/50 transition-all duration-1000"
+        style={{ width: `${shipment.progressPercent}%` }}
+      />
+
+      <div className="flex justify-between items-start">
+        <div className="flex gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
+             <Package className="w-5 h-5 text-slate-400" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-sm text-foreground">{shipment.id}</span>
-              <span className={cn(
-                "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border",
-                config.className
-              )}>
-                <StatusIcon className="w-3 h-3" />
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-mono text-slate-500">#{shipment.shipmentId.substring(0, 8)}</span>
+              <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase flex items-center gap-1", config.className)}>
+                <StatusIcon className="w-2.5 h-2.5" />
                 {config.label}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1 truncate">
-              {shipment.origin} → {shipment.destination}
+            <h4 className="text-sm font-bold text-slate-200 truncate">{shipment.label}</h4>
+            <p className="text-xs text-slate-500 mt-1">
+              {shipment.currentHub} <span className="text-blue-500 mx-1">→</span> {shipment.destinationHub}
             </p>
-            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-              <span>{shipment.carrier}</span>
-              <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
-              <span>{shipment.weight}</span>
-            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">ETA</p>
-            <p className="text-sm font-medium text-foreground">{shipment.eta}</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+        
+        <div className="text-right flex flex-col items-end">
+          <p className="text-[10px] text-slate-500 uppercase font-bold">Progress</p>
+          <p className="text-sm font-mono text-blue-400">{shipment.progressPercent}%</p>
+          <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-blue-500 transition-colors mt-2" />
         </div>
+      </div>
+      
+      {/* Footer Info */}
+      <div className="mt-3 pt-3 border-t border-slate-800/50 flex justify-between items-center">
+        <span className="text-[10px] text-slate-500 truncate max-w-[150px]">
+          Recipient: <span className="text-slate-300 font-medium">{shipment.consumerName}</span>
+        </span>
+        <span className="text-[10px] font-mono text-slate-600 italic">
+          v21.0_Engine_Stable
+        </span>
       </div>
     </button>
   )

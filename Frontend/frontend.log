@@ -1,0 +1,66 @@
+
+> my-v0-project@0.1.0 dev
+> next dev
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.1.11:3000
+
+ ✓ Starting...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Ready in 972ms
+ GET / 200 in 2.6s (compile: 2.4s, render: 161ms)
+ GET / 200 in 40ms (compile: 3ms, render: 37ms)
+(node:126839) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ GET / 200 in 52ms (compile: 22ms, render: 29ms)
+ GET / 200 in 40ms (compile: 4ms, render: 36ms)
+ GET / 200 in 32ms (compile: 2ms, render: 29ms)
+ GET / 200 in 33ms (compile: 3ms, render: 30ms)
+ ✓ Compiled in 265ms
+ GET / 200 in 165ms (compile: 84ms, render: 81ms)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 30ms (compile: 4ms, render: 26ms)
+ ✓ Compiled in 53ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 39ms
+ GET / 200 in 38ms (compile: 8ms, render: 30ms)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 25ms (compile: 2ms, render: 23ms)
+ ✓ Compiled in 36ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 26ms (compile: 3ms, render: 23ms)
+ ✓ Compiled in 57ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 23ms (compile: 2ms, render: 21ms)
+ ✓ Compiled in 48ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 22ms (compile: 1939µs, render: 20ms)
+ ✓ Compiled in 35ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 20ms (compile: 1708µs, render: 19ms)
+ ✓ Compiled in 34ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 24ms (compile: 1869µs, render: 22ms)
+ ✓ Compiled in 31ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 22ms (compile: 1708µs, render: 21ms)
+ ✓ Compiled in 26ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 21ms (compile: 1746µs, render: 19ms)
+ ✓ Compiled in 26ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 34ms
+ GET / 200 in 24ms (compile: 2ms, render: 22ms)
+ GET / 200 in 24ms (compile: 1812µs, render: 22ms)
+ GET / 200 in 23ms (compile: 1631µs, render: 22ms)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 144ms
+ GET / 200 in 37ms (compile: 5ms, render: 32ms)
+ ✓ Compiled in 149ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 172ms (compile: 106ms, render: 66ms)
+ GET / 200 in 41ms (compile: 3ms, render: 38ms)
+ GET / 200 in 29ms (compile: 1948µs, render: 27ms)
+ GET / 200 in 39ms (compile: 1771µs, render: 37ms)
+ GET / 200 in 39ms (compile: 3ms, render: 36ms)

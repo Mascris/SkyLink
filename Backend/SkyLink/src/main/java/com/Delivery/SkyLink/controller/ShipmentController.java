@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/shipment")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
 public class ShipmentController {
 
   private final ShipmentRepository shipmentRepository;
