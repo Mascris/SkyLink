@@ -1,0 +1,19 @@
+[Unit]
+Description=SkyLink Service Monitor
+After=network.target
+
+[Service]
+Type=simple
+User=mascris
+WorkingDirectory=/home/mascris/project/JAVA/SkyLink
+ExecStart=/home/mascris/project/JAVA/SkyLink/skylink-monitor.sh watch 30
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=skylink-monitor
+
+[Install]
+WantedBy=multi-user.target

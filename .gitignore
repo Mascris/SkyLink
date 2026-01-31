@@ -1,0 +1,83 @@
+# ═══════════════════════════════════════════════════════════════
+# SkyLink Project - Root .gitignore
+# ═══════════════════════════════════════════════════════════════
+# Note: Backend and Frontend have their own .gitignore files
+# This file covers project-wide ignores only
+
+# ───────────────────────────────────────────────────────────────
+# Logs & Runtime Files (from skylink scripts)
+# ───────────────────────────────────────────────────────────────
+logs/
+*.log
+backend.log
+frontend.log
+*.zip
+
+# Script PID files
+/tmp/skylink/
+*.pid
+
+
+# ───────────────────────────────────────────────────────────────
+# Docker
+# ───────────────────────────────────────────────────────────────
+docker-compose.override.yml
+.docker/
+*.env.docker
+
+# ───────────────────────────────────────────────────────────────
+# Database Backups & Dumps
+# ───────────────────────────────────────────────────────────────
+*.sql.gz
+*.sql.backup
+backups/
+dumps/
+
+# ───────────────────────────────────────────────────────────────
+# Operating System Files
+# ───────────────────────────────────────────────────────────────
+
+### macOS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+### Windows ###
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+### Linux ###
+*~
+.directory
+.Trash-*
+
+# ───────────────────────────────────────────────────────────────
+# Temporary & Backup Files
+# ───────────────────────────────────────────────────────────────
+*.tmp
+*.temp
+temp/
+tmp/
+*.bak
+*.backup
+*.old
+*.swp
+*.swo
+
+# ───────────────────────────────────────────────────────────────
+# Custom Project Files
+# ───────────────────────────────────────────────────────────────
+
+# Test data
+test-data/
+sample-data/
+
+# Documentation builds
+docs/build/
+docs/_build/
+
+# Add your custom ignores below this line
+# ───────────────────────────────────────────────────────────────
