@@ -24,6 +24,7 @@ frontend.log
 docker-compose.override.yml
 .docker/
 *.env.docker
+.env
 
 # ───────────────────────────────────────────────────────────────
 # Database Backups & Dumps

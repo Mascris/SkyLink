@@ -6,7 +6,7 @@ services:
       - "1433:1433"
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=amineSERRAR52479.
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
       - MSSQL_PID=Developer
     volumes:
       - skylink_data:/var/opt/mssql
