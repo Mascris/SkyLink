@@ -5,20 +5,33 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 
-interface ShipmentLocation {
-    id: string
+interface Hub {
+    hubCode: string
+    city: string
+    country: string
+    latitude: number
+    longtitude: number // note: DB typo preserved
+}
+
+interface ApiShipment {
+    shipmentId: string
     label: string
-    origin: { lat: number; lng: number; name: string }
-    destination: { lat: number; lng: number; name: string }
+    currentHub: string
+    destinationHub: string
     status: string
-    progress: number
+    progressPercent: number
+    currentLat: number
+    currentLng: number
+    routePathJson: string
 }
 
 interface LeafletMapProps {
-    shipments: ShipmentLocation[]
+    shipments: ApiShipment[]
+    hubs: Hub[]
+    getPathCoords?: (path: string) => any[]
 }
 
-// Fix for Leaflet marker icons in Next.js
+// Marker icons
 const originIcon = new L.DivIcon({
     className: "custom-div-icon",
     html: `<div style="background-color: hsl(var(--primary)); width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
@@ -40,26 +53,19 @@ const transitIcon = new L.DivIcon({
     iconAnchor: [5, 5],
 })
 
-// Calculate current position based on progress
-function getCurrentPosition(origin: { lat: number; lng: number }, dest: { lat: number; lng: number }, progress: number) {
-    const t = progress / 100
-    return {
-        lat: origin.lat + (dest.lat - origin.lat) * t,
-        lng: origin.lng + (dest.lng - origin.lng) * t,
-    }
-}
-
-// Create curved path between two points
-function createCurvedPath(start: { lat: number; lng: number }, end: { lat: number; lng: number }): [number, number][] {
+// Create curved path between two lat/lng points
+function createCurvedPath(
+    start: { lat: number; lng: number },
+    end: { lat: number; lng: number }
+): [number, number][] {
     const points: [number, number][] = []
     const midLat = (start.lat + end.lat) / 2
     const midLng = (start.lng + end.lng) / 2
 
-    // Calculate curve height based on distance
-    const distance = Math.sqrt(Math.pow(end.lat - start.lat, 2) + Math.pow(end.lng - start.lng, 2))
+    const distance = Math.sqrt(
+        Math.pow(end.lat - start.lat, 2) + Math.pow(end.lng - start.lng, 2)
+    )
     const curveHeight = distance * 0.15
-
-    // Add curve offset perpendicular to the line
     const angle = Math.atan2(end.lng - start.lng, end.lat - start.lat)
     const offsetLat = curveHeight * Math.cos(angle + Math.PI / 2)
     const offsetLng = curveHeight * Math.sin(angle + Math.PI / 2)
@@ -67,35 +73,37 @@ function createCurvedPath(start: { lat: number; lng: number }, end: { lat: numbe
     const segments = 20
     for (let i = 0; i <= segments; i++) {
         const t = i / segments
-        // Quadratic bezier curve
         const lat = (1 - t) * (1 - t) * start.lat + 2 * (1 - t) * t * (midLat + offsetLat) + t * t * end.lat
         const lng = (1 - t) * (1 - t) * start.lng + 2 * (1 - t) * t * (midLng + offsetLng) + t * t * end.lng
         points.push([lat, lng])
     }
-
     return points
 }
 
 function MapController() {
     const map = useMap()
-
     useEffect(() => {
-        // Disable scroll zoom for better UX, enable on click
         map.scrollWheelZoom.disable()
-
-        map.on("click", () => {
-            map.scrollWheelZoom.enable()
-        })
-
-        map.on("mouseout", () => {
-            map.scrollWheelZoom.disable()
-        })
+        map.on("click", () => map.scrollWheelZoom.enable())
+        map.on("mouseout", () => map.scrollWheelZoom.disable())
     }, [map])
-
     return null
 }
 
-export default function LeafletMap({ shipments }: LeafletMapProps) {
+export default function LeafletMap({ shipments, hubs }: LeafletMapProps) {
+    // Build a hub lookup map for fast code → coords resolution
+    const hubMap = new Map<string, Hub>()
+    hubs.forEach(h => hubMap.set(h.hubCode, h))
+
+    const statusColor = (status: string) => {
+        switch (status) {
+            case "TRANSIT": return "#3b82f6"
+            case "DELIVERED": return "#10b981"
+            case "DELAYED": return "#ef4444"
+            default: return "#f59e0b"
+        }
+    }
+
     return (
         <MapContainer
             center={[20, 0]}
@@ -110,55 +118,67 @@ export default function LeafletMap({ shipments }: LeafletMapProps) {
             />
 
             {shipments.map((shipment) => {
-                const curvedPath = createCurvedPath(shipment.origin, shipment.destination)
-                const currentPos = getCurrentPosition(shipment.origin, shipment.destination, shipment.progress)
+                const originHub = hubMap.get(shipment.currentHub)
+                const destHub = hubMap.get(shipment.destinationHub)
+
+                // Skip drawing if we can't resolve hub coordinates
+                if (!originHub || !destHub) return null
+
+                const origin = { lat: originHub.latitude, lng: originHub.longtitude }
+                const dest = { lat: destHub.latitude, lng: destHub.longtitude }
+                const curvedPath = createCurvedPath(origin, dest)
+
+                // Interpolated current position
+                const t = (shipment.progressPercent ?? 0) / 100
+                const currentPos = {
+                    lat: origin.lat + (dest.lat - origin.lat) * t,
+                    lng: origin.lng + (dest.lng - origin.lng) * t,
+                }
 
                 return (
-                    <div key={shipment.id}>
-                        {/* Route line */}
+                    <div key={shipment.shipmentId}>
+                        {/* Route curve */}
                         <Polyline
                             positions={curvedPath}
                             pathOptions={{
-                                color: shipment.status === "in-transit" ? "#3b82f6" :
-                                    shipment.status === "delivered" ? "#10b981" :
-                                        shipment.status === "delayed" ? "#ef4444" : "#f59e0b",
+                                color: statusColor(shipment.status),
                                 weight: 2,
                                 opacity: 0.7,
-                                dashArray: shipment.status === "in-transit" ? "5, 10" : undefined,
+                                dashArray: shipment.status === "TRANSIT" ? "5, 10" : undefined,
                             }}
                         />
 
                         {/* Origin marker */}
-                        <Marker position={[shipment.origin.lat, shipment.origin.lng]} icon={originIcon}>
+                        <Marker position={[origin.lat, origin.lng]} icon={originIcon}>
                             <Popup>
                                 <div className="text-sm">
-                                    <p className="font-semibold">{shipment.origin.name}</p>
-                                    <p className="text-gray-600">Origin</p>
+                                    <p className="font-semibold">{originHub.city}, {originHub.country}</p>
+                                    <p className="text-gray-600">Origin Hub · {shipment.currentHub}</p>
                                     <p className="text-xs text-gray-500">{shipment.label}</p>
                                 </div>
                             </Popup>
                         </Marker>
 
                         {/* Destination marker */}
-                        <Marker position={[shipment.destination.lat, shipment.destination.lng]} icon={destinationIcon}>
+                        <Marker position={[dest.lat, dest.lng]} icon={destinationIcon}>
                             <Popup>
                                 <div className="text-sm">
-                                    <p className="font-semibold">{shipment.destination.name}</p>
-                                    <p className="text-gray-600">Destination</p>
+                                    <p className="font-semibold">{destHub.city}, {destHub.country}</p>
+                                    <p className="text-gray-600">Destination Hub · {shipment.destinationHub}</p>
                                     <p className="text-xs text-gray-500">{shipment.label}</p>
                                 </div>
                             </Popup>
                         </Marker>
 
-                        {/* Current position marker (if in transit) */}
-                        {shipment.status === "in-transit" && shipment.progress < 100 && (
+                        {/* Current position marker (in transit only) */}
+                        {shipment.status === "TRANSIT" && (shipment.progressPercent ?? 0) < 100 && (
                             <Marker position={[currentPos.lat, currentPos.lng]} icon={transitIcon}>
                                 <Popup>
                                     <div className="text-sm">
                                         <p className="font-semibold">{shipment.label}</p>
-                                        <p className="text-gray-600">In Transit - {shipment.progress}%</p>
+                                        <p className="text-gray-600">In Transit — {shipment.progressPercent}%</p>
                                         <p className="text-xs text-gray-500">
-                                            {shipment.origin.name} → {shipment.destination.name}
+                                            {originHub.city} → {destHub.city}
                                         </p>
                                     </div>
                                 </Popup>

@@ -38,10 +38,13 @@ interface ShipmentsListProps {
   filterStatus?: string | null
 }
 
+const PAGE_SIZE = 8
+
 export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus }: ShipmentsListProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [showFilters, setShowFilters] = useState(false)
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Update internal filter if external filter (from StatsCards) changes
   React.useEffect(() => {
@@ -50,6 +53,7 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
     } else {
       setSelectedStatuses([])
     }
+    setCurrentPage(1) // Reset to first page on filter change
   }, [filterStatus])
 
   // Filter the live data from Java
@@ -69,10 +73,18 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
     })
   }, [apiShipments, searchQuery, selectedStatuses])
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredShipments.length / PAGE_SIZE)
+  const paginatedShipments = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return filteredShipments.slice(start, start + PAGE_SIZE)
+  }, [filteredShipments, currentPage])
+
   const toggleStatus = (status: string) => {
     setSelectedStatuses(prev =>
       prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
     )
+    setCurrentPage(1) // Reset to first page on filter change
   }
 
   return (
@@ -87,7 +99,7 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
             {apiShipments ? filteredShipments.length : 0} Active
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2 mt-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -95,7 +107,10 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
               placeholder="Search by ID, Cargo or Customer..."
               className="pl-9 bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-600"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
             />
           </div>
           <Button
@@ -112,7 +127,10 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
           <div className="mt-3 p-3 rounded-lg bg-slate-900/80 border border-slate-800 animate-in slide-in-from-top-2">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-bold text-slate-500 uppercase">System Filters</p>
-              <button onClick={() => setSelectedStatuses([])} className="text-[10px] text-blue-400 hover:underline">Clear</button>
+              <button onClick={() => {
+                setSelectedStatuses([])
+                setCurrentPage(1)
+              }} className="text-[10px] text-blue-400 hover:underline">Clear</button>
             </div>
             <div className="flex flex-wrap gap-2">
               {Object.keys(statusConfig).map((status) => (
@@ -121,8 +139,8 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
                   onClick={() => toggleStatus(status)}
                   className={cn(
                     "px-2.5 py-1 text-[10px] font-bold rounded-md border transition-all",
-                    selectedStatuses.includes(status) 
-                      ? "bg-blue-600 border-blue-400 text-white" 
+                    selectedStatuses.includes(status)
+                      ? "bg-blue-600 border-blue-400 text-white"
                       : "bg-slate-800 border-slate-700 text-slate-400"
                   )}
                 >
@@ -135,14 +153,14 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
       </CardHeader>
 
       <CardContent className="flex-1 overflow-auto px-4 pb-4">
-        {filteredShipments.length === 0 ? (
+        {paginatedShipments.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-12 opacity-50">
             <Package className="w-10 h-10 mb-2" />
             <p className="text-sm font-mono">No Shipments Found in Current Radius</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredShipments.map((s) => (
+            {paginatedShipments.map((s) => (
               <ShipmentRow
                 key={s.shipmentId}
                 shipment={s}
@@ -152,6 +170,35 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
           </div>
         )}
       </CardContent>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="px-6 py-3 border-t border-slate-800 flex items-center justify-between bg-slate-900/20">
+          <p className="text-[10px] font-mono text-slate-500 uppercase">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-[10px] border-slate-800 bg-slate-900 text-slate-400 hover:text-white"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-[10px] border-slate-800 bg-slate-900 text-slate-400 hover:text-white"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }
@@ -166,7 +213,7 @@ function ShipmentRow({ shipment, onClick }: { shipment: ApiShipment; onClick: ()
       className="w-full text-left p-4 rounded-xl bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/50 hover:bg-slate-900/80 transition-all group relative overflow-hidden"
     >
       {/* Background Progress Glow */}
-      <div 
+      <div
         className="absolute bottom-0 left-0 h-[2px] bg-blue-500/50 transition-all duration-1000"
         style={{ width: `${shipment.progressPercent}%` }}
       />
@@ -174,7 +221,7 @@ function ShipmentRow({ shipment, onClick }: { shipment: ApiShipment; onClick: ()
       <div className="flex justify-between items-start">
         <div className="flex gap-3">
           <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
-             <Package className="w-5 h-5 text-slate-400" />
+            <Package className="w-5 h-5 text-slate-400" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -190,14 +237,14 @@ function ShipmentRow({ shipment, onClick }: { shipment: ApiShipment; onClick: ()
             </p>
           </div>
         </div>
-        
+
         <div className="text-right flex flex-col items-end">
           <p className="text-[10px] text-slate-500 uppercase font-bold">Progress</p>
           <p className="text-sm font-mono text-blue-400">{shipment.progressPercent}%</p>
           <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-blue-500 transition-colors mt-2" />
         </div>
       </div>
-      
+
       {/* Footer Info */}
       <div className="mt-3 pt-3 border-t border-slate-800/50 flex justify-between items-center">
         <span className="text-[10px] text-slate-500 truncate max-w-[150px]">

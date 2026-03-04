@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
+import { fetchHubs, type Hub } from "@/lib/api"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { StatsCards } from "@/components/dashboard/stats-cards"
@@ -23,30 +24,36 @@ import { AddShipmentView } from "@/components/dashboard/views/add-shipment-view"
 
 type StatusFilter = "in-transit" | "delivered" | "pending" | "delayed" | null
 
+// Export the ApiShipment type so other components can import it
+export type ApiShipment = Shipment
+
 export default function DashboardContent() {
     // --- LIVE DATA FETCHING LOGIC ---
     const [shipments, setShipments] = useState<Shipment[]>([])
+    const [hubs, setHubs] = useState<Hub[]>([])
     const [loading, setLoading] = useState(true)
 
-useEffect(() => {
-    console.log("⚓ Pulse Started"); 
+    useEffect(() => {
+        console.log("⚓ Pulse Started");
 
-    const fetchData = async () => {
-        try {
-            const response = await fetch("http://localhost:8080/api/shipments/active");
-            if (!response.ok) throw new Error("Backend offline");
-            const data = await response.json();
-            
-            console.log("📦 Data Received:", data.length, "shipments");
-            setShipments(data); 
-        } catch (err) {
-            console.error("📡 Signal Lost:", err);
-        }
-    };
+        const fetchData = async () => {
+            try {
+                const response = await fetch("/api/shipment/active");
+                if (!response.ok) throw new Error("Backend offline");
+                const data = await response.json();
 
-    fetchData(); 
-    const interval = setInterval(fetchData, 3000); // 3 seconds
-    return () => clearInterval(interval);
+                console.log("📦 Data Received:", data.length, "shipments");
+                setShipments(data);
+            } catch (err) {
+                console.error("📡 Signal Lost:", err);
+            }
+        };
+
+        fetchData();
+        // Fetch hubs once (they rarely change)
+        fetchHubs().then(setHubs).catch(() => { });
+        const interval = setInterval(fetchData, 10000); // 10 seconds
+        return () => clearInterval(interval);
     }, []);
     const stats = useMemo(() => {
         return {
@@ -153,13 +160,13 @@ useEffect(() => {
             default:
                 return (
                     <div className="space-y-6 animate-in fade-in duration-300">
-                        <StatsCards 
-                            onFilterClick={handleFilterClick} 
-                            activeFilter={statusFilter} 
-                            stats={stats} 
+                        <StatsCards
+                            onFilterClick={handleFilterClick}
+                            activeFilter={statusFilter}
+                            stats={stats}
                         />
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                            <WorldMap shipments={shipments} />
+                            <WorldMap shipments={shipments} hubs={hubs} />
                             <ShipmentsList
                                 apiShipments={shipments}
                                 onShipmentClick={handleShipmentClick}
@@ -207,7 +214,7 @@ useEffect(() => {
 
                 <main className="flex-1 overflow-auto p-6 relative">
                     {renderMainContent()}
-                    
+
                     {/* Live Indicator Overlay */}
                     {!loading && (
                         <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-green-500/30 flex items-center gap-2">

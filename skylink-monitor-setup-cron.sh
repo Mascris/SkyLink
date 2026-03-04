@@ -19,8 +19,8 @@ echo ""
 
 # Check if monitor script exists
 if [ ! -f "$MONITOR_SCRIPT" ]; then
-    echo "❌ Monitor script not found: $MONITOR_SCRIPT"
-    exit 1
+  echo "❌ Monitor script not found: $MONITOR_SCRIPT"
+  exit 1
 fi
 
 # Make sure it's executable
@@ -38,38 +38,38 @@ echo ""
 read -p "Enter choice [1-6]: " choice
 
 case $choice in
-    1)
-        CRON_SCHEDULE="* * * * *"
-        DESCRIPTION="every minute"
-        ;;
-    2)
-        CRON_SCHEDULE="*/5 * * * *"
-        DESCRIPTION="every 5 minutes"
-        ;;
-    3)
-        CRON_SCHEDULE="*/15 * * * *"
-        DESCRIPTION="every 15 minutes"
-        ;;
-    4)
-        CRON_SCHEDULE="*/30 * * * *"
-        DESCRIPTION="every 30 minutes"
-        ;;
-    5)
-        echo ""
-        echo "Enter cron schedule (e.g., '*/2 * * * *' for every 2 minutes):"
-        read -p "Schedule: " CRON_SCHEDULE
-        DESCRIPTION="custom schedule"
-        ;;
-    6)
-        # Remove existing cron job
-        (crontab -l 2>/dev/null | grep -v "skylink-monitor.sh") | crontab -
-        echo -e "${GREEN}✅ SkyLink monitor cron job removed${NC}"
-        exit 0
-        ;;
-    *)
-        echo "❌ Invalid choice"
-        exit 1
-        ;;
+1)
+  CRON_SCHEDULE="* * * * *"
+  DESCRIPTION="every minute"
+  ;;
+2)
+  CRON_SCHEDULE="*/5 * * * *"
+  DESCRIPTION="every 5 minutes"
+  ;;
+3)
+  CRON_SCHEDULE="*/15 * * * *"
+  DESCRIPTION="every 15 minutes"
+  ;;
+4)
+  CRON_SCHEDULE="*/30 * * * *"
+  DESCRIPTION="every 30 minutes"
+  ;;
+5)
+  echo ""
+  echo "Enter cron schedule (e.g., '*/2 * * * *' for every 2 minutes):"
+  read -p "Schedule: " CRON_SCHEDULE
+  DESCRIPTION="custom schedule"
+  ;;
+6)
+  # Remove existing cron job
+  (crontab -l 2>/dev/null | grep -v "skylink-monitor.sh") | crontab -
+  echo -e "${GREEN}✅ SkyLink monitor cron job removed${NC}"
+  exit 0
+  ;;
+*)
+  echo "❌ Invalid choice"
+  exit 1
+  ;;
 esac
 
 # Create the cron job
@@ -79,7 +79,10 @@ CRON_JOB="$CRON_SCHEDULE $MONITOR_SCRIPT once >> /tmp/skylink/monitor-cron.log 2
 (crontab -l 2>/dev/null | grep -v "skylink-monitor.sh") | crontab -
 
 # Add new cron job
-(crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
+(
+  crontab -l 2>/dev/null
+  echo "$CRON_JOB"
+) | crontab -
 
 echo ""
 echo -e "${GREEN}✅ Cron job installed successfully!${NC}"

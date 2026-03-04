@@ -9,6 +9,9 @@ export interface Shipment {
   currentLng: number;
   routePathJson: string;
   createdAt: string;
+  consumerName?: string;
+  deliveryAddress?: string;
+  containerId?: string;
 }
 
 export interface Hub {
