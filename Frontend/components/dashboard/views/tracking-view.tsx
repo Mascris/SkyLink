@@ -1,7 +1,4 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { fetchActiveShipments, type Shipment as ApiShipment } from "@/lib/api"
+import { useState, useMemo } from "react"
 import {
   Search,
   MapPin,
@@ -13,11 +10,20 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Filter,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { type Shipment as ApiShipment, type Hub } from "@/lib/api"
 
 interface TrackedShipment {
   id: string
@@ -36,6 +42,7 @@ function normalizeStatus(status: string): string {
   if (s.includes("deliver")) return "delivered"
   if (s.includes("delay")) return "delayed"
   if (s.includes("pend")) return "pending"
+  if (s.includes("queue")) return "pending"
   return s
 }
 
@@ -46,46 +53,52 @@ const statusColors: Record<string, string> = {
   delayed: "bg-red-500/20 text-red-400",
 }
 
-export function TrackingView() {
+interface TrackingViewProps {
+  shipments: ApiShipment[]
+  hubs: Hub[]
+}
+
+export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const [shipments, setShipments] = useState<TrackedShipment[]>([])
-  const [selectedShipment, setSelectedShipment] = useState<TrackedShipment | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [originFilter, setOriginFilter] = useState<string>("all")
+  const [destFilter, setDestFilter] = useState<string>("all")
+  const [selectedShipmentId, setSelectedShipmentId] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 8
 
-  useEffect(() => {
-    const loadShipments = async () => {
-      try {
-        const data = await fetchActiveShipments()
-        const mappedShipments: TrackedShipment[] = data.map((s: ApiShipment) => ({
-          id: s.shipmentId,
-          trackingNumber: s.label,
-          origin: s.currentHub || "N/A",
-          destination: s.destinationHub || "N/A",
-          status: normalizeStatus(s.status),
-          carrier: "SkyLink Logistics",
-          eta: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A",
-          progress: s.progressPercent || 0,
-        }))
-        setShipments(mappedShipments)
-        if (mappedShipments.length > 0) {
-          setSelectedShipment(mappedShipments[0])
-        }
-        setLoading(false)
-      } catch (err) {
-        console.error("Failed to load shipments", err)
-        setLoading(false)
-      }
-    }
-    loadShipments()
-  }, [])
+  const trackedShipments = useMemo(() => {
+    return apiShipments.map((s) => ({
+      id: s.shipmentId,
+      trackingNumber: s.label,
+      origin: s.currentHub || "N/A",
+      destination: s.destinationHub || "N/A",
+      status: normalizeStatus(s.status),
+      carrier: "SkyLink Logistics",
+      eta: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A",
+      progress: s.progressPercent || 0,
+    }))
+  }, [apiShipments])
 
-  const filteredShipments = shipments.filter((s) =>
-    s.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.origin?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.destination?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredShipments = useMemo(() => {
+    return trackedShipments.filter((s) => {
+      const matchesSearch =
+        s.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.origin?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.destination?.toLowerCase().includes(searchQuery.toLowerCase())
+
+      const matchesOrigin = originFilter === "all" || s.origin === originFilter
+      const matchesDest = destFilter === "all" || s.destination === destFilter
+
+      return matchesSearch && matchesOrigin && matchesDest
+    })
+  }, [trackedShipments, searchQuery, originFilter, destFilter])
+
+  const selectedShipment = useMemo(() => {
+    if (selectedShipmentId) {
+      return filteredShipments.find(s => s.id === selectedShipmentId) || filteredShipments[0]
+    }
+    return filteredShipments[0]
+  }, [selectedShipmentId, filteredShipments])
 
   const totalPages = Math.ceil(filteredShipments.length / itemsPerPage)
   const paginatedShipments = filteredShipments.slice(
@@ -94,13 +107,13 @@ export function TrackingView() {
   )
 
   const handleSearch = () => {
-    const found = shipments.find(
+    const found = filteredShipments.find(
       (s) =>
         s.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.id.includes(searchQuery)
     )
     if (found) {
-      setSelectedShipment(found)
+      setSelectedShipmentId(found.id)
     }
   }
 
@@ -129,14 +142,6 @@ export function TrackingView() {
     return pages
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -145,26 +150,78 @@ export function TrackingView() {
         <p className="text-muted-foreground">Track your shipments in real-time</p>
       </div>
 
-      {/* Search Bar */}
+      {/* Search & Filters */}
       <Card className="bg-card border-border">
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="Enter tracking number..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setCurrentPage(1)
-                }}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="pl-12 h-12 text-base bg-input border-border"
-              />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Enter tracking number..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    setCurrentPage(1)
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  className="pl-12 h-12 text-base bg-input border-border"
+                />
+              </div>
+              <Button onClick={handleSearch} className="h-12 px-8">
+                Track Shipment
+              </Button>
             </div>
-            <Button onClick={handleSearch} className="h-12 px-8">
-              Track Shipment
-            </Button>
+
+            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-border/50">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Filter className="w-4 h-4" />
+                <span>Filters:</span>
+              </div>
+
+              <div className="w-48">
+                <Select value={originFilter} onValueChange={(val) => { setOriginFilter(val); setCurrentPage(1); }}>
+                  <SelectTrigger className="bg-input border-border">
+                    <SelectValue placeholder="Origin Hub" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Origins</SelectItem>
+                    {hubs.map(hub => (
+                      <SelectItem key={`origin-${hub.hubCode}`} value={hub.hubCode}>
+                        {hub.city} ({hub.hubCode})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-48">
+                <Select value={destFilter} onValueChange={(val) => { setDestFilter(val); setCurrentPage(1); }}>
+                  <SelectTrigger className="bg-input border-border">
+                    <SelectValue placeholder="Destination Hub" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Destinations</SelectItem>
+                    {hubs.map(hub => (
+                      <SelectItem key={`dest-${hub.hubCode}`} value={hub.hubCode}>
+                        {hub.city} ({hub.hubCode})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(originFilter !== "all" || destFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setOriginFilter("all"); setDestFilter("all"); }}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -184,7 +241,7 @@ export function TrackingView() {
                   "bg-card border-border cursor-pointer transition-all hover:border-primary/50",
                   selectedShipment?.id === shipment.id && "border-primary"
                 )}
-                onClick={() => setSelectedShipment(shipment)}
+                onClick={() => setSelectedShipmentId(shipment.id)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
@@ -197,9 +254,9 @@ export function TrackingView() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="truncate">{shipment.origin?.split(",")[0]}</span>
+                    <span className="truncate">{shipment.origin}</span>
                     <ArrowRight className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">{shipment.destination?.split(",")[0]}</span>
+                    <span className="truncate">{shipment.destination}</span>
                   </div>
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-xs mb-1">
@@ -216,6 +273,11 @@ export function TrackingView() {
                 </CardContent>
               </Card>
             ))}
+            {filteredShipments.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                No shipments found matching your filters.
+              </div>
+            )}
           </div>
 
           {/* Pagination */}

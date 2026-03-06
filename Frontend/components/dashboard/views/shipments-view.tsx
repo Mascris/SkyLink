@@ -1,7 +1,4 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { fetchActiveShipments, type Shipment as ApiShipment } from "@/lib/api"
+import { useMemo, useState } from "react"
 import {
   Search,
   Plus,
@@ -18,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { type Shipment as ApiShipment } from "@/lib/api"
 
 interface Shipment {
   id: string
@@ -35,11 +33,11 @@ interface Shipment {
 // Helper to normalize status values from DB
 function normalizeStatus(status: string): string {
   const s = status?.toLowerCase().replace(/_/g, "-") || "pending"
-  // Map common variations
   if (s.includes("transit")) return "in-transit"
   if (s.includes("deliver")) return "delivered"
   if (s.includes("delay")) return "delayed"
   if (s.includes("pend")) return "pending"
+  if (s.includes("queue")) return "pending"
   return s
 }
 
@@ -54,48 +52,41 @@ function getStatusStyle(status: string): { label: string; color: string } {
   return config[normalized] || { label: status || "Unknown", color: "bg-gray-500/20 text-gray-400" }
 }
 
-export function ShipmentsView() {
-  const [shipments, setShipments] = useState<Shipment[]>([])
-  const [loading, setLoading] = useState(true)
+interface ShipmentsViewProps {
+  shipments: ApiShipment[]
+}
+
+export function ShipmentsView({ shipments: apiShipments }: ShipmentsViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  useEffect(() => {
-    const loadShipments = async () => {
-      try {
-        const data = await fetchActiveShipments()
-        const mappedShipments: Shipment[] = data.map((s: ApiShipment) => ({
-          id: s.shipmentId,
-          trackingNumber: s.label,
-          origin: s.currentHub || "N/A",
-          destination: s.destinationHub || "N/A",
-          status: s.status || "pending",
-          carrier: "SkyLink Logistics",
-          weight: "N/A",
-          customer: "N/A",
-          eta: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A",
-          createdAt: s.createdAt || "",
-        }))
-        setShipments(mappedShipments)
-        setLoading(false)
-      } catch (err) {
-        console.error("Failed to load shipments", err)
-        setLoading(false)
-      }
-    }
-    loadShipments()
-  }, [])
+  const shipments = useMemo(() => {
+    return apiShipments.map((s: ApiShipment) => ({
+      id: s.shipmentId,
+      trackingNumber: s.label,
+      origin: s.currentHub || "N/A",
+      destination: s.destinationHub || "N/A",
+      status: s.status || "pending",
+      carrier: "SkyLink Logistics",
+      weight: "N/A",
+      customer: s.consumerName || "N/A",
+      eta: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A",
+      createdAt: s.createdAt || "",
+    }))
+  }, [apiShipments])
 
-  const filteredShipments = shipments.filter((s) => {
-    const matchesSearch =
-      s.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.origin?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.destination?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || normalizeStatus(s.status) === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  const filteredShipments = useMemo(() => {
+    return shipments.filter((s) => {
+      const matchesSearch =
+        s.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.origin?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.destination?.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesStatus = statusFilter === "all" || normalizeStatus(s.status) === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [shipments, searchQuery, statusFilter])
 
   const totalPages = Math.ceil(filteredShipments.length / itemsPerPage)
   const paginatedShipments = filteredShipments.slice(
@@ -103,12 +94,12 @@ export function ShipmentsView() {
     currentPage * itemsPerPage
   )
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: shipments.length,
     inTransit: shipments.filter((s) => normalizeStatus(s.status) === "in-transit").length,
     delivered: shipments.filter((s) => normalizeStatus(s.status) === "delivered").length,
     delayed: shipments.filter((s) => normalizeStatus(s.status) === "delayed").length,
-  }
+  }), [shipments])
 
   // Pagination helper - show max 7 page numbers
   const getPageNumbers = () => {
@@ -133,14 +124,6 @@ export function ShipmentsView() {
       }
     }
     return pages
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
   }
 
   return (
@@ -270,11 +253,11 @@ export function ShipmentsView() {
                       <td className="p-4">
                         <div className="flex items-center gap-2 text-sm">
                           <span className="text-muted-foreground truncate max-w-[120px]">
-                            {shipment.origin?.split(",")[0] || "N/A"}
+                            {shipment.origin}
                           </span>
                           <ArrowRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                           <span className="text-foreground truncate max-w-[120px]">
-                            {shipment.destination?.split(",")[0] || "N/A"}
+                            {shipment.destination}
                           </span>
                         </div>
                       </td>
@@ -297,52 +280,61 @@ export function ShipmentsView() {
                     </tr>
                   )
                 })}
+                {paginatedShipments.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                      No shipments found matching your criteria.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between p-4 border-t border-border">
-            <p className="text-sm text-muted-foreground">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, filteredShipments.length)} of {filteredShipments.length} shipments
-            </p>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 bg-transparent"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              {getPageNumbers().map((page, index) => (
-                typeof page === "number" ? (
-                  <Button
-                    key={index}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </Button>
-                ) : (
-                  <span key={index} className="px-2 text-muted-foreground">...</span>
-                )
-              ))}
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 bg-transparent"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between p-4 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, filteredShipments.length)} of {filteredShipments.length} shipments
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 bg-transparent"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                {getPageNumbers().map((page, index) => (
+                  typeof page === "number" ? (
+                    <Button
+                      key={index}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  ) : (
+                    <span key={index} className="px-2 text-muted-foreground">...</span>
+                  )
+                ))}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 bg-transparent"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

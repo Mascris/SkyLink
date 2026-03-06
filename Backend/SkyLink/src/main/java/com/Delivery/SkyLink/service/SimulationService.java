@@ -26,11 +26,12 @@ public class SimulationService {
   private final HubRepository hubRepository;
   private final ShipmentRepository shipmentRepository;
   private final ConsumerRepository consumerRepository;
+  private final PathfinderService pathfinderService;
 
   private final Faker faker = new Faker();
   private final Random random = new Random();
 
-  @Scheduled(fixedRate = 10000)
+  @Scheduled(fixedRate = 8000)
   public void generateOrder() {
     List<Hub> hubs = hubRepository.findAll();
     List<Consumer> customers = consumerRepository.findAll();
@@ -40,9 +41,20 @@ public class SimulationService {
       return;
     }
 
+    // Don't exceed too many active shipments
+    long activeCount = shipmentRepository.count();
+    if (activeCount > 300) {
+      log.info("📦 Skipping order: {} shipments active, waiting for deliveries.", activeCount);
+      return;
+    }
+
     Collections.shuffle(hubs);
     Hub origin = hubs.get(0);
     Hub destination = hubs.get(1);
+
+    // Compute route through hub connections
+    List<String> routePath = pathfinderService.findPath(origin.getHubCode(), destination.getHubCode());
+    String routePathJson = String.join(",", routePath);
 
     Shipment shipment = new Shipment();
 
@@ -58,14 +70,16 @@ public class SimulationService {
     shipment.setCurrentLat(origin.getLatitude());
     shipment.setCurrentLng(origin.getLongtitude());
     shipment.setContainerId(faker.regexify("CONT-[0-9]{8}"));
+    shipment.setRoutePathJson(routePathJson);
 
     shipmentRepository.save(shipment);
 
-    log.info("📦 NEW ORDER: [{}] assigned to customer {}",
-        shipment.getLabel(), shipment.getConsumerName());
+    log.info("📦 NEW ORDER: [{}] {} → {} (route: {}) assigned to {}",
+        shipment.getLabel(), origin.getHubCode(), destination.getHubCode(),
+        routePathJson, shipment.getConsumerName());
   }
 
-  @Scheduled(fixedRate = 50000)
+  @Scheduled(fixedRate = 30000)
   public void createNewConsumer() {
 
     long count = consumerRepository.count();

@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 @Slf4j
@@ -19,35 +20,77 @@ public class MovementService {
 
   private final ShipmentRepository shipmentRepository;
   private final HubRepository hubRepository;
+  private final Random random = new Random();
 
-  @Scheduled(fixedRate = 32000)
+  @Scheduled(fixedRate = 15000)
   public void moveShipments() {
+    // ─── Launch queued shipments ───
     List<Shipment> queued = shipmentRepository.findByStatus("IN_QUEUE");
-
     for (Shipment s : queued) {
       s.setStatus("TRANSIT");
       shipmentRepository.save(s);
-      log.info("⚓ SHIPMENT [{}] has left the port!", s.getLabel());
+      log.info("⚓ SHIPMENT [{}] has left the port! ({} → {})",
+          s.getLabel(), s.getCurrentHub(), s.getDestinationHub());
     }
 
+    // ─── Resume delayed shipments (~50% chance per tick) ───
+    List<Shipment> delayed = shipmentRepository.findByStatus("DELAYED");
+    for (Shipment s : delayed) {
+      if (random.nextDouble() < 0.50) {
+        s.setStatus("TRANSIT");
+        shipmentRepository.save(s);
+        log.info("🔄 RESUMED: [{}] is back in transit after delay.", s.getLabel());
+      }
+    }
+
+    // ─── Move in-transit shipments ───
     List<Shipment> inTransit = shipmentRepository.findByStatus("TRANSIT");
     for (Shipment s : inTransit) {
-      int newProgress = s.getProgressPercent() + 5;
+      // ~10% chance of delay per tick
+      if (random.nextDouble() < 0.10) {
+        s.setStatus("DELAYED");
+        shipmentRepository.save(s);
+        log.info("⚠️ DELAYED: [{}] has been delayed!", s.getLabel());
+        continue;
+      }
+
+      int increment = 5 + random.nextInt(6); // +5% to +10% per tick
+      int newProgress = s.getProgressPercent() + increment;
 
       if (newProgress >= 100) {
         s.setProgressPercent(100);
         s.setStatus("DELIVERED");
-        log.info("🏁 ARRIVED: [{}] has reached its destination!", s.getLabel());
+        log.info("🏁 ARRIVED: [{}] has reached {} !", s.getLabel(), s.getDestinationHub());
       } else {
         s.setProgressPercent(newProgress);
         updateCoordinates(s);
       }
       shipmentRepository.save(s);
     }
+
+    // ─── Cleanup old delivered shipments (keep max 200 total) ───
+    long total = shipmentRepository.count();
+    if (total > 250) {
+      List<Shipment> delivered = shipmentRepository.findByStatus("DELIVERED");
+      int toRemove = (int) (total - 200);
+      int removed = 0;
+      for (Shipment s : delivered) {
+        if (removed >= toRemove) break;
+        shipmentRepository.delete(s);
+        removed++;
+      }
+      if (removed > 0) {
+        log.info("🧹 Cleaned up {} old delivered shipments.", removed);
+      }
+    }
   }
 
   private void updateCoordinates(Shipment s) {
-    String[] path = s.getRoutePathJson().split(",");
+    String routePath = s.getRoutePathJson();
+    if (routePath == null || routePath.isEmpty()) return;
+
+    String[] path = routePath.split(",");
+    if (path.length < 2) return;
 
     int totalLegs = path.length - 1;
     double globalProgress = s.getProgressPercent() / 100.0;

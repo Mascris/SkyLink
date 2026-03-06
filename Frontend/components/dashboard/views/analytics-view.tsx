@@ -1,9 +1,7 @@
-"use client"
-
-import { useState, useEffect } from "react"
+import { useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, Truck, CheckCircle, AlertTriangle, TrendingUp, Clock, MapPin } from "lucide-react"
-import { fetchActiveShipments, type Shipment } from "@/lib/api"
+import { type Shipment } from "@/lib/api"
 
 // Helper to normalize status values from DB
 function normalizeStatus(status: string): string {
@@ -12,48 +10,32 @@ function normalizeStatus(status: string): string {
   if (s.includes("deliver")) return "delivered"
   if (s.includes("delay")) return "delayed"
   if (s.includes("pend")) return "pending"
+  if (s.includes("queue")) return "pending"
   return s
 }
 
-export function AnalyticsView() {
-  const [stats, setStats] = useState({
-    total: 0,
-    inTransit: 0,
-    delivered: 0,
-    pending: 0,
-    delayed: 0,
-    locations: new Map<string, number>(),
-  })
-  const [loading, setLoading] = useState(true)
+interface AnalyticsViewProps {
+  shipments: Shipment[]
+}
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchActiveShipments()
-        const locations = new Map<string, number>()
-
-        data.forEach((s: Shipment) => {
-          if (s.currentHub) {
-            locations.set(s.currentHub, (locations.get(s.currentHub) || 0) + 1)
-          }
-        })
-
-        setStats({
-          total: data.length,
-          inTransit: data.filter((s: Shipment) => normalizeStatus(s.status) === "in-transit").length,
-          delivered: data.filter((s: Shipment) => normalizeStatus(s.status) === "delivered").length,
-          pending: data.filter((s: Shipment) => normalizeStatus(s.status) === "pending").length,
-          delayed: data.filter((s: Shipment) => normalizeStatus(s.status) === "delayed").length,
-          locations,
-        })
-        setLoading(false)
-      } catch (err) {
-        console.error("Failed to load analytics", err)
-        setLoading(false)
+export function AnalyticsView({ shipments }: AnalyticsViewProps) {
+  const stats = useMemo(() => {
+    const locations = new Map<string, number>()
+    shipments.forEach((s: Shipment) => {
+      if (s.currentHub) {
+        locations.set(s.currentHub, (locations.get(s.currentHub) || 0) + 1)
       }
+    })
+
+    return {
+      total: shipments.length,
+      inTransit: shipments.filter((s: Shipment) => normalizeStatus(s.status) === "in-transit").length,
+      delivered: shipments.filter((s: Shipment) => normalizeStatus(s.status) === "delivered").length,
+      pending: shipments.filter((s: Shipment) => normalizeStatus(s.status) === "pending").length,
+      delayed: shipments.filter((s: Shipment) => normalizeStatus(s.status) === "delayed").length,
+      locations,
     }
-    loadData()
-  }, [])
+  }, [shipments])
 
   const deliveryRate = stats.total > 0
     ? ((stats.delivered / stats.total) * 100).toFixed(1)
@@ -80,7 +62,7 @@ export function AnalyticsView() {
               </div>
               <div>
                 <p className="text-2xl font-semibold text-foreground">
-                  {loading ? "..." : stats.total}
+                  {stats.total}
                 </p>
                 <p className="text-sm text-muted-foreground">Total</p>
               </div>
@@ -95,7 +77,7 @@ export function AnalyticsView() {
               </div>
               <div>
                 <p className="text-2xl font-semibold text-foreground">
-                  {loading ? "..." : stats.inTransit}
+                  {stats.inTransit}
                 </p>
                 <p className="text-sm text-muted-foreground">In Transit</p>
               </div>
@@ -110,7 +92,7 @@ export function AnalyticsView() {
               </div>
               <div>
                 <p className="text-2xl font-semibold text-foreground">
-                  {loading ? "..." : stats.delivered}
+                  {stats.delivered}
                 </p>
                 <p className="text-sm text-muted-foreground">Delivered</p>
               </div>
@@ -125,7 +107,7 @@ export function AnalyticsView() {
               </div>
               <div>
                 <p className="text-2xl font-semibold text-foreground">
-                  {loading ? "..." : stats.delayed}
+                  {stats.delayed}
                 </p>
                 <p className="text-sm text-muted-foreground">Delayed</p>
               </div>
@@ -232,9 +214,7 @@ export function AnalyticsView() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <p className="text-muted-foreground">Loading...</p>
-          ) : topLocations.length > 0 ? (
+          {topLocations.length > 0 ? (
             <div className="space-y-3">
               {topLocations.map(([location, count], index) => (
                 <div key={location} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
@@ -247,7 +227,7 @@ export function AnalyticsView() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">No location data available</p>
+            <p className="text-center py-8 text-muted-foreground">No location data available</p>
           )}
         </CardContent>
       </Card>

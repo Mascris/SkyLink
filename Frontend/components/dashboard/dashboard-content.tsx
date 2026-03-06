@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
-import { fetchHubs, type Hub } from "@/lib/api"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { fetchHubs, type Hub, type Shipment } from "@/lib/api"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Header } from "@/components/dashboard/header"
 import { StatsCards } from "@/components/dashboard/stats-cards"
-import { ShipmentsList, type Shipment } from "@/components/dashboard/shipments-list"
+import { ShipmentsList } from "@/components/dashboard/shipments-list"
 import { WorldMap } from "@/components/dashboard/world-map"
 import { ShipmentModal } from "@/components/dashboard/shipment-modal"
-import { NotificationsPanel } from "@/components/dashboard/notifications-panel"
+import { NotificationsPanel, type ShipmentNotification } from "@/components/dashboard/notifications-panel"
 import { CommandPalette } from "@/components/dashboard/command-palette"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { ToastNotification, type Toast } from "@/components/dashboard/toast-notification"
@@ -18,7 +18,6 @@ import { TrackingView } from "@/components/dashboard/views/tracking-view"
 import { AnalyticsView } from "@/components/dashboard/views/analytics-view"
 import { CustomersView } from "@/components/dashboard/views/customers-view"
 import { ReportsView } from "@/components/dashboard/views/reports-view"
-import { SettingsView } from "@/components/dashboard/views/settings-view"
 import { ShipmentsView } from "@/components/dashboard/views/shipments-view"
 import { AddShipmentView } from "@/components/dashboard/views/add-shipment-view"
 
@@ -33,6 +32,78 @@ export default function DashboardContent() {
     const [hubs, setHubs] = useState<Hub[]>([])
     const [loading, setLoading] = useState(true)
 
+    // --- NOTIFICATIONS ---
+    const [notifications, setNotifications] = useState<ShipmentNotification[]>([])
+    const previousShipmentsRef = useRef<Map<string, string>>(new Map())
+
+    /** Generate notifications when shipment statuses change */
+    const detectStatusChanges = useCallback((newShipments: Shipment[]) => {
+        const prev = previousShipmentsRef.current
+        if (prev.size === 0) {
+            // First load — just populate the map, don't generate notifications
+            const map = new Map<string, string>()
+            newShipments.forEach(s => map.set(s.shipmentId, s.status))
+            previousShipmentsRef.current = map
+            return
+        }
+
+        const newNotifications: ShipmentNotification[] = []
+
+        for (const shipment of newShipments) {
+            const oldStatus = prev.get(shipment.shipmentId)
+
+            if (oldStatus && oldStatus !== shipment.status) {
+                if (shipment.status === "DELIVERED") {
+                    newNotifications.push({
+                        id: `${shipment.shipmentId}-${Date.now()}`,
+                        type: "arrived",
+                        title: "Ship Arrived",
+                        message: `${shipment.label} has been delivered to ${shipment.destinationHub}.`,
+                        timestamp: new Date(),
+                        read: false,
+                    })
+                } else if (shipment.status === "TRANSIT") {
+                    newNotifications.push({
+                        id: `${shipment.shipmentId}-${Date.now()}`,
+                        type: "departed",
+                        title: "Ship Departed",
+                        message: `${shipment.label} has departed from ${shipment.currentHub} heading to ${shipment.destinationHub}.`,
+                        timestamp: new Date(),
+                        read: false,
+                    })
+                } else if (shipment.status === "DELAYED") {
+                    newNotifications.push({
+                        id: `${shipment.shipmentId}-${Date.now()}`,
+                        type: "delayed",
+                        title: "Shipment Delayed",
+                        message: `${shipment.label} has been delayed.`,
+                        timestamp: new Date(),
+                        read: false,
+                    })
+                }
+            } else if (!oldStatus) {
+                // New shipment appeared
+                newNotifications.push({
+                    id: `${shipment.shipmentId}-${Date.now()}`,
+                    type: "created",
+                    title: "New Shipment",
+                    message: `${shipment.label} has been registered (${shipment.currentHub} → ${shipment.destinationHub}).`,
+                    timestamp: new Date(),
+                    read: false,
+                })
+            }
+        }
+
+        // Update the ref
+        const map = new Map<string, string>()
+        newShipments.forEach(s => map.set(s.shipmentId, s.status))
+        previousShipmentsRef.current = map
+
+        if (newNotifications.length > 0) {
+            setNotifications(prev => [...newNotifications, ...prev].slice(0, 100)) // Keep max 100
+        }
+    }, [])
+
     useEffect(() => {
         console.log("⚓ Pulse Started");
 
@@ -44,6 +115,7 @@ export default function DashboardContent() {
 
                 console.log("📦 Data Received:", data.length, "shipments");
                 setShipments(data);
+                detectStatusChanges(data);
             } catch (err) {
                 console.error("📡 Signal Lost:", err);
             }
@@ -54,15 +126,40 @@ export default function DashboardContent() {
         fetchHubs().then(setHubs).catch(() => { });
         const interval = setInterval(fetchData, 10000); // 10 seconds
         return () => clearInterval(interval);
-    }, []);
+    }, [detectStatusChanges]);
+
+    // Helper to normalize status values from DB
+    const normalizeStatus = useCallback((status: string): string => {
+        const s = status?.toLowerCase().replace(/_/g, "-") || "pending"
+        if (s.includes("transit")) return "in-transit"
+        if (s.includes("deliver")) return "delivered"
+        if (s.includes("delay")) return "delayed"
+        if (s.includes("pend")) return "pending"
+        if (s.includes("queue")) return "pending"
+        return s
+    }, [])
+
     const stats = useMemo(() => {
         return {
             total: shipments.length,
-            inTransit: shipments.filter(s => s.status === 'TRANSIT').length,
-            delivered: shipments.filter(s => s.status === 'DELIVERED').length,
-            pending: shipments.filter(s => s.status === 'IN_QUEUE').length
+            inTransit: shipments.filter(s => normalizeStatus(s.status) === 'in-transit').length,
+            delivered: shipments.filter(s => normalizeStatus(s.status) === 'delivered').length,
+            pending: shipments.filter(s => normalizeStatus(s.status) === 'pending').length,
+            delayed: shipments.filter(s => normalizeStatus(s.status) === 'delayed').length
         }
-    }, [shipments])
+    }, [shipments, normalizeStatus])
+
+    const unreadNotificationCount = useMemo(() =>
+        notifications.filter(n => !n.read).length
+        , [notifications])
+
+    const markAllNotificationsRead = useCallback(() => {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    }, [])
+
+    const clearAllNotifications = useCallback(() => {
+        setNotifications([])
+    }, [])
 
     // --- ORIGINAL V0 STATES ---
     const [activeView, setActiveView] = useState("overview")
@@ -138,6 +235,23 @@ export default function DashboardContent() {
         }
     }
 
+    // Map Shipment to ShipmentDetail for the modal
+    const mappedSelectedShipment = useMemo(() => {
+        if (!selectedShipment) return null
+        return {
+            id: selectedShipment.shipmentId,
+            origin: selectedShipment.currentHub || "N/A",
+            destination: selectedShipment.destinationHub || "N/A",
+            status: normalizeStatus(selectedShipment.status) as any,
+            eta: selectedShipment.createdAt ? new Date(selectedShipment.createdAt).toLocaleDateString() : "N/A",
+            carrier: "SkyLink Logistics",
+            weight: "N/A",
+            customer: selectedShipment.consumerName,
+            email: "N/A",
+            phone: "N/A",
+        }
+    }, [selectedShipment, normalizeStatus])
+
     // --- RENDER LOGIC (NOW INJECTED WITH LIVE DATA) ---
     const renderMainContent = () => {
         switch (activeView) {
@@ -148,15 +262,13 @@ export default function DashboardContent() {
             case "fleet":
                 return <FleetView shipments={shipments} />
             case "tracking":
-                return <TrackingView shipments={shipments} />
+                return <TrackingView shipments={shipments} hubs={hubs} />
             case "analytics":
                 return <AnalyticsView shipments={shipments} />
             case "customers":
-                return <CustomersView />
+                return <CustomersView shipments={shipments} />
             case "reports":
-                return <ReportsView />
-            case "settings":
-                return <SettingsView />
+                return <ReportsView shipments={shipments} hubs={hubs} />
             default:
                 return (
                     <div className="space-y-6 animate-in fade-in duration-300">
@@ -188,7 +300,6 @@ export default function DashboardContent() {
             analytics: "Analytics",
             customers: "Customers",
             reports: "Reports",
-            settings: "Settings",
         }
         return titles[activeView] || "Dashboard"
     }
@@ -199,7 +310,7 @@ export default function DashboardContent() {
                 activeView={activeView}
                 onViewChange={handleViewChange}
                 onNotificationsClick={() => setShowNotifications(true)}
-                onSettingsClick={() => setActiveView("settings")}
+                notificationCount={unreadNotificationCount}
             />
 
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -226,14 +337,16 @@ export default function DashboardContent() {
             </div>
 
             <ShipmentModal
-                shipment={selectedShipment}
-                isOpen={!!selectedShipment}
+                shipment={mappedSelectedShipment}
                 onClose={() => setSelectedShipment(null)}
             />
 
             <NotificationsPanel
                 isOpen={showNotifications}
                 onClose={() => setShowNotifications(false)}
+                notifications={notifications}
+                onMarkAllRead={markAllNotificationsRead}
+                onClearAll={clearAllNotifications}
             />
 
             <CommandPalette
@@ -255,11 +368,7 @@ export default function DashboardContent() {
                 onClose={() => setShowKeyboardShortcuts(false)}
             />
 
-            <div className="fixed bottom-4 right-4 z-50 space-y-2">
-                {toasts.map((toast) => (
-                    <ToastNotification key={toast.id} {...toast} onClose={removeToast} />
-                ))}
-            </div>
+            <ToastNotification toasts={toasts} onRemove={removeToast} />
         </div>
     )
 }

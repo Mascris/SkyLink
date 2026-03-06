@@ -39,17 +39,16 @@ const navItems: NavItem[] = [
 
 const bottomItems: NavItem[] = [
   { icon: Bell, label: "Notifications", id: "notifications", badge: 3 },
-  { icon: Settings, label: "Settings", id: "settings" },
 ]
 
 interface SidebarProps {
   activeView: string
   onViewChange: (view: string) => void
   onNotificationsClick: () => void
-  onLogout: () => void
+  notificationCount?: number
 }
 
-export function Sidebar({ activeView, onViewChange, onNotificationsClick, onLogout }: SidebarProps) {
+export function Sidebar({ activeView, onViewChange, onNotificationsClick, notificationCount = 0 }: SidebarProps) {
   const [collapsed, setCollapsed] = React.useState(false)
 
   const handleNavClick = (item: NavItem) => {
@@ -75,7 +74,7 @@ export function Sidebar({ activeView, onViewChange, onNotificationsClick, onLogo
           </div>
           {!collapsed && (
             <span className="text-lg font-semibold text-sidebar-foreground">
-              GlobalTrack
+              SkyLink
             </span>
           )}
         </div>
@@ -99,7 +98,7 @@ export function Sidebar({ activeView, onViewChange, onNotificationsClick, onLogo
         {bottomItems.map((item) => (
           <NavButton
             key={item.id}
-            item={item}
+            item={{ ...item, badge: item.id === "notifications" ? (notificationCount || undefined) : item.badge }}
             collapsed={collapsed}
             isActive={activeView === item.id}
             onClick={() => handleNavClick(item)}
@@ -112,17 +111,16 @@ export function Sidebar({ activeView, onViewChange, onNotificationsClick, onLogo
           collapsed && "justify-center px-2"
         )}>
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-medium">
-            JD
+            AS
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">John Doe</p>
+              <p className="text-sm font-medium text-sidebar-foreground truncate">Amine Serrar</p>
               <p className="text-xs text-muted-foreground truncate">Operations Manager</p>
             </div>
           )}
           {!collapsed && (
             <button
-              onClick={onLogout}
               className="p-1.5 rounded-md hover:bg-muted transition-colors"
               aria-label="Log out"
             >

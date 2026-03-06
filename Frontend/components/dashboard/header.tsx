@@ -13,9 +13,10 @@ interface HeaderProps {
   onCommandPalette: () => void
   onActivityFeed: () => void
   onKeyboardShortcuts: () => void
+  title: string
 }
 
-export function Header({ onNotificationsClick, onSearch, onCommandPalette, onActivityFeed, onKeyboardShortcuts }: HeaderProps) {
+export function Header({ onNotificationsClick, onSearch, onCommandPalette, onActivityFeed, onKeyboardShortcuts, title }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearch, setShowSearch] = useState(false)
 
@@ -39,7 +40,7 @@ export function Header({ onNotificationsClick, onSearch, onCommandPalette, onAct
   return (
     <header className="flex items-center justify-between h-16 px-6 border-b border-border bg-background">
       <div>
-        <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
           <Calendar className="w-3.5 h-3.5" />
           <span>{today}</span>
@@ -48,9 +49,9 @@ export function Header({ onNotificationsClick, onSearch, onCommandPalette, onAct
 
       <div className="flex items-center gap-3">
         {/* Mobile Search Toggle */}
-        <Button 
-          variant="outline" 
-          size="icon" 
+        <Button
+          variant="outline"
+          size="icon"
           className="md:hidden bg-transparent"
           onClick={() => setShowSearch(!showSearch)}
         >
@@ -78,7 +79,7 @@ export function Header({ onNotificationsClick, onSearch, onCommandPalette, onAct
           )}
         </form>
 
-        
+
         {/* Command Palette Trigger */}
         <Button
           variant="outline"
@@ -102,9 +103,9 @@ export function Header({ onNotificationsClick, onSearch, onCommandPalette, onAct
         </Button>
 
         {/* Activity Feed */}
-        <Button 
-          variant="outline" 
-          size="icon" 
+        <Button
+          variant="outline"
+          size="icon"
           className="relative bg-transparent"
           onClick={onActivityFeed}
         >
@@ -116,9 +117,9 @@ export function Header({ onNotificationsClick, onSearch, onCommandPalette, onAct
           <span className="sr-only">Activity Feed</span>
         </Button>
 
-        <Button 
-          variant="outline" 
-          size="icon" 
+        <Button
+          variant="outline"
+          size="icon"
           className="relative bg-transparent"
           onClick={onNotificationsClick}
         >

@@ -1,89 +1,59 @@
 "use client"
 
-import { X, Package, AlertTriangle, CheckCircle, Clock, Bell } from "lucide-react"
+import { X, Ship, AlertTriangle, CheckCircle, Clock, Bell, Anchor } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-interface Notification {
+export interface ShipmentNotification {
   id: string
-  type: "alert" | "success" | "warning" | "info"
+  type: "departed" | "arrived" | "delayed" | "created"
   title: string
   message: string
-  time: string
+  timestamp: Date
   read: boolean
 }
 
-const notifications: Notification[] = [
-  {
-    id: "1",
-    type: "alert",
-    title: "Shipment Delayed",
-    message: "SHP-2024-004 from Dubai has been delayed due to weather conditions.",
-    time: "10 minutes ago",
-    read: false,
-  },
-  {
-    id: "2",
-    type: "success",
-    title: "Delivery Complete",
-    message: "SHP-2024-002 has been successfully delivered to New York.",
-    time: "1 hour ago",
-    read: false,
-  },
-  {
-    id: "3",
-    type: "warning",
-    title: "Customs Hold",
-    message: "SHP-2024-007 is currently held at customs in Rotterdam.",
-    time: "3 hours ago",
-    read: false,
-  },
-  {
-    id: "4",
-    type: "info",
-    title: "New Shipment Created",
-    message: "SHP-2024-008 has been registered and is awaiting pickup.",
-    time: "5 hours ago",
-    read: true,
-  },
-  {
-    id: "5",
-    type: "success",
-    title: "Fleet Update",
-    message: "Vessel MV Pacific Star has completed maintenance.",
-    time: "1 day ago",
-    read: true,
-  },
-]
-
 const typeConfig = {
-  alert: { icon: AlertTriangle, className: "text-destructive bg-destructive/15" },
-  success: { icon: CheckCircle, className: "text-success bg-success/15" },
-  warning: { icon: Clock, className: "text-warning bg-warning/15" },
-  info: { icon: Package, className: "text-info bg-info/15" },
+  departed: { icon: Ship, className: "text-blue-400 bg-blue-500/15" },
+  arrived: { icon: Anchor, className: "text-emerald-400 bg-emerald-500/15" },
+  delayed: { icon: AlertTriangle, className: "text-red-400 bg-red-500/15" },
+  created: { icon: Clock, className: "text-amber-400 bg-amber-500/15" },
+}
+
+function timeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return "Just now"
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 }
 
 interface NotificationsPanelProps {
-  open: boolean
+  isOpen: boolean
   onClose: () => void
+  notifications: ShipmentNotification[]
   onMarkAllRead: () => void
+  onClearAll: () => void
 }
 
-export function NotificationsPanel({ open, onClose, onMarkAllRead }: NotificationsPanelProps) {
-  if (!open) return null
+export function NotificationsPanel({ isOpen, onClose, notifications, onMarkAllRead, onClearAll }: NotificationsPanelProps) {
+  if (!isOpen) return null
 
   const unreadCount = notifications.filter(n => !n.read).length
 
   return (
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-background/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Panel */}
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-2xl flex flex-col">
+      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
@@ -92,7 +62,9 @@ export function NotificationsPanel({ open, onClose, onMarkAllRead }: Notificatio
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">Notifications</h2>
-              <p className="text-xs text-muted-foreground">{unreadCount} unread</p>
+              <p className="text-xs text-muted-foreground">
+                {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+              </p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -106,62 +78,72 @@ export function NotificationsPanel({ open, onClose, onMarkAllRead }: Notificatio
           <Button variant="ghost" size="sm" onClick={onMarkAllRead} className="text-xs">
             Mark all as read
           </Button>
-          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+          <Button variant="ghost" size="sm" onClick={onClearAll} className="text-xs text-muted-foreground">
             Clear all
           </Button>
         </div>
 
         {/* Notifications List */}
         <div className="flex-1 overflow-auto">
-          {notifications.map((notification) => {
-            const config = typeConfig[notification.type]
-            const Icon = config.icon
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center px-6">
+              <Bell className="w-12 h-12 text-muted-foreground/40 mb-3" />
+              <p className="text-sm text-muted-foreground">No notifications yet</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">
+                You'll be notified when ships depart, arrive, or experience delays.
+              </p>
+            </div>
+          ) : (
+            notifications.map((notification) => {
+              const config = typeConfig[notification.type]
+              const Icon = config.icon
 
-            return (
-              <button
-                key={notification.id}
-                className={cn(
-                  "w-full text-left p-4 border-b border-border hover:bg-secondary/50 transition-colors",
-                  !notification.read && "bg-secondary/30"
-                )}
-              >
-                <div className="flex gap-3">
-                  <div className={cn(
-                    "flex items-center justify-center w-9 h-9 rounded-lg shrink-0",
-                    config.className
-                  )}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className={cn(
-                        "text-sm font-medium text-foreground",
-                        !notification.read && "font-semibold"
-                      )}>
-                        {notification.title}
-                      </p>
-                      {!notification.read && (
-                        <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />
-                      )}
+              return (
+                <button
+                  key={notification.id}
+                  className={cn(
+                    "w-full text-left p-4 border-b border-border hover:bg-secondary/50 transition-colors",
+                    !notification.read && "bg-secondary/30"
+                  )}
+                >
+                  <div className="flex gap-3">
+                    <div className={cn(
+                      "flex items-center justify-center w-9 h-9 rounded-lg shrink-0",
+                      config.className
+                    )}>
+                      <Icon className="w-4 h-4" />
                     </div>
-                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground/70 mt-2">
-                      {notification.time}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={cn(
+                          "text-sm font-medium text-foreground",
+                          !notification.read && "font-semibold"
+                        )}>
+                          {notification.title}
+                        </p>
+                        {!notification.read && (
+                          <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-2">
+                        {timeAgo(notification.timestamp)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </button>
-            )
-          })}
+                </button>
+              )
+            })
+          )}
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-border">
-          <Button variant="outline" className="w-full bg-transparent">
-            View All Notifications
-          </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            {notifications.length} notification{notifications.length !== 1 ? "s" : ""} total
+          </p>
         </div>
       </div>
     </div>
