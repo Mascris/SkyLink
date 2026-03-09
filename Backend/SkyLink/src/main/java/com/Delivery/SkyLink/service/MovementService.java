@@ -68,11 +68,12 @@ public class MovementService {
       shipmentRepository.save(s);
     }
 
-    // ─── Cleanup old delivered shipments (keep max 200 total) ───
+    // Database cleanup (Disabled to allow more shipments)
+    /*
     long total = shipmentRepository.count();
-    if (total > 250) {
+    if (total > 5000) { // Increased threshold
       List<Shipment> delivered = shipmentRepository.findByStatus("DELIVERED");
-      int toRemove = (int) (total - 200);
+      int toRemove = (int) (total - 4000);
       int removed = 0;
       for (Shipment s : delivered) {
         if (removed >= toRemove) break;
@@ -83,13 +84,16 @@ public class MovementService {
         log.info("🧹 Cleaned up {} old delivered shipments.", removed);
       }
     }
+    */
   }
 
   private void updateCoordinates(Shipment s) {
     String routePath = s.getRoutePathJson();
     if (routePath == null || routePath.isEmpty()) return;
 
-    String[] path = routePath.split(",");
+    // Parse JSON array format: ["SHA","SIN"] -> SHA,SIN
+    String cleanPath = routePath.replace("[", "").replace("]", "").replace("\"", "");
+    String[] path = cleanPath.split(",");
     if (path.length < 2) return;
 
     int totalLegs = path.length - 1;

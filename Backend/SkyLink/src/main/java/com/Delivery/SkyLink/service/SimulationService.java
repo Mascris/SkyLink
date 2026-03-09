@@ -41,12 +41,14 @@ public class SimulationService {
       return;
     }
 
-    // Don't exceed too many active shipments
+    // Don't exceed too many active shipments (Increased limit)
+    /*
     long activeCount = shipmentRepository.count();
-    if (activeCount > 300) {
+    if (activeCount > 10000) {
       log.info("📦 Skipping order: {} shipments active, waiting for deliveries.", activeCount);
       return;
     }
+    */
 
     Collections.shuffle(hubs);
     Hub origin = hubs.get(0);
@@ -54,7 +56,8 @@ public class SimulationService {
 
     // Compute route through hub connections
     List<String> routePath = pathfinderService.findPath(origin.getHubCode(), destination.getHubCode());
-    String routePathJson = String.join(",", routePath);
+    // Format as JSON array for DB constraint: ["SHA","SIN"]
+    String routePathJson = "[\"" + String.join("\",\"", routePath) + "\"]";
 
     Shipment shipment = new Shipment();
 
@@ -83,7 +86,7 @@ public class SimulationService {
   public void createNewConsumer() {
 
     long count = consumerRepository.count();
-    if (count < 150) {
+    if (count < 1000) { // Increased from 150
       Consumer c = new Consumer();
       c.setFirstName(faker.name().firstName());
       c.setLastName(faker.name().lastName());
