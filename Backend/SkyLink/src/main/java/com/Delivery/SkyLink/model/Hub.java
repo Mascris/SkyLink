@@ -25,4 +25,7 @@ public class Hub {
 
   @Column(name = "[TimeZoneOffset]")
   private Integer timeZoneOffset;
+
+  @Column(name = "[WeatherCondition]")
+  private String weatherCondition;
 }

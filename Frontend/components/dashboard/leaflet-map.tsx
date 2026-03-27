@@ -56,6 +56,13 @@ const transitIcon = new L.DivIcon({
     iconAnchor: [5, 5],
 })
 
+const shelteringIcon = new L.DivIcon({
+    className: "custom-div-icon",
+    html: `<div style="background-color: #f59e0b; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fbbf24; box-shadow: 0 0 8px rgba(245,158,11,0.8), 0 2px 4px rgba(0,0,0,0.5); animation: pulse 1s infinite;"></div>`,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+})
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SEA-LANE GRAPH — Maritime waypoints connected as ships actually sail
 // ─────────────────────────────────────────────────────────────────────────────
@@ -435,6 +442,7 @@ export default function LeafletMap({ shipments, hubs }: LeafletMapProps) {
             case "TRANSIT": return "#3b82f6"
             case "DELIVERED": return "#10b981"
             case "DELAYED": return "#ef4444"
+            case "SHELTERING": return "#f59e0b"
             default: return "#f59e0b"
         }
     }
@@ -442,7 +450,7 @@ export default function LeafletMap({ shipments, hubs }: LeafletMapProps) {
     // Prioritize TRANSIT shipments, then cap to MAX_MAP_SHIPMENTS
     const visibleShipments = useMemo(() => {
         const sorted = [...shipments].sort((a, b) => {
-            const priority: Record<string, number> = { TRANSIT: 0, DELAYED: 1, IN_QUEUE: 2, DELIVERED: 3 }
+            const priority: Record<string, number> = { TRANSIT: 0, SHELTERING: 1, DELAYED: 2, IN_QUEUE: 3, DELIVERED: 4 }
             return (priority[a.status] ?? 99) - (priority[b.status] ?? 99)
         })
         return sorted.slice(0, MAX_MAP_SHIPMENTS)
@@ -525,6 +533,34 @@ export default function LeafletMap({ shipments, hubs }: LeafletMapProps) {
             })
     }, [routes])
 
+    // Sheltering markers (ships stuck in storm)
+    const shelteringMarkers = useMemo(() => {
+        return routes
+            .filter(r => r.status === "SHELTERING" && r.progressPercent < 100)
+            .map(r => {
+                const path = r.path
+                const t = r.progressPercent / 100
+                const totalPoints = path.length
+                const exactIdx = t * (totalPoints - 1)
+                const idx = Math.floor(exactIdx)
+                const frac = exactIdx - idx
+
+                const safeIdx = Math.min(idx, totalPoints - 2)
+                const lat = path[safeIdx][0] + (path[safeIdx + 1][0] - path[safeIdx][0]) * frac
+                const lng = path[safeIdx][1] + (path[safeIdx + 1][1] - path[safeIdx][1]) * frac
+
+                return {
+                    id: r.id,
+                    lat,
+                    lng,
+                    label: r.label,
+                    progress: r.progressPercent,
+                    from: r.originHub.city,
+                    to: r.destHub.city,
+                }
+            })
+    }, [routes])
+
     return (
         <MapContainer
             center={[20, 0]}
@@ -578,6 +614,20 @@ export default function LeafletMap({ shipments, hubs }: LeafletMapProps) {
                             <p className="font-semibold">{tm.label}</p>
                             <p className="text-gray-600">In Transit — {tm.progress}%</p>
                             <p className="text-xs text-gray-500">{tm.from} → {tm.to}</p>
+                        </div>
+                    </Popup>
+                </Marker>
+            ))}
+
+            {/* Sheltering markers — ships stuck in a storm ⛈️ */}
+            {shelteringMarkers.map((sm) => (
+                <Marker key={`shelter-${sm.id}`} position={[sm.lat, sm.lng]} icon={shelteringIcon}>
+                    <Popup>
+                        <div className="text-sm">
+                            <p className="font-semibold">⛈️ {sm.label}</p>
+                            <p className="text-orange-600 font-bold">SHELTERING — Storm Ahead</p>
+                            <p className="text-gray-600">{sm.progress}% complete</p>
+                            <p className="text-xs text-gray-500">{sm.from} → {sm.to}</p>
                         </div>
                     </Popup>
                 </Marker>

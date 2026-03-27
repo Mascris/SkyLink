@@ -1,12 +1,14 @@
 package com.Delivery.SkyLink.service;
 
 import com.Delivery.SkyLink.model.Hub;
+import com.Delivery.SkyLink.model.Ship;
 import com.Delivery.SkyLink.model.Shipment;
 import com.Delivery.SkyLink.model.Consumer;
 
 import com.Delivery.SkyLink.repository.HubRepository;
 import com.Delivery.SkyLink.repository.ShipmentRepository;
 import com.Delivery.SkyLink.repository.ConsumerRepository;
+import com.Delivery.SkyLink.repository.ShipRepository;
 
 import net.datafaker.Faker;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -26,6 +29,7 @@ public class SimulationService {
   private final HubRepository hubRepository;
   private final ShipmentRepository shipmentRepository;
   private final ConsumerRepository consumerRepository;
+  private final ShipRepository shipRepository;
   private final PathfinderService pathfinderService;
 
   private final Faker faker = new Faker();
@@ -35,9 +39,15 @@ public class SimulationService {
   public void generateOrder() {
     List<Hub> hubs = hubRepository.findAll();
     List<Consumer> customers = consumerRepository.findAll();
+    List<Ship> ships = shipRepository.findAll();
 
     if (hubs.size() < 2 || customers.isEmpty()) {
       log.warn("⏳ Skipping order: Waiting for Hubs and at least one Consumer to exist...");
+      return;
+    }
+
+    if (ships.isEmpty()) {
+      log.warn("⏳ Skipping order: No ships found in the database.");
       return;
     }
 
@@ -59,6 +69,14 @@ public class SimulationService {
     // Format as JSON array for DB constraint: ["SHA","SIN"]
     String routePathJson = "[\"" + String.join("\",\"", routePath) + "\"]";
 
+    // Pick a random ship
+    Ship assignedShip = ships.get(random.nextInt(ships.size()));
+
+    // Calculate ETA: slower SpeedFactor → more hours
+    // SpeedFactor of 5 = 5x slower → 100 hours; SpeedFactor of 20 = ~25 hours
+    long etaHours = Math.round(500.0 / assignedShip.getSpeedFactor());
+    LocalDateTime estimatedArrival = LocalDateTime.now().plusHours(etaHours);
+
     Shipment shipment = new Shipment();
 
     Consumer buyer = customers.get(random.nextInt(customers.size()));
@@ -75,11 +93,16 @@ public class SimulationService {
     shipment.setContainerId(faker.regexify("CONT-[0-9]{8}"));
     shipment.setRoutePathJson(routePathJson);
 
+    // Assign ship
+    shipment.setShipId(assignedShip.getShipId());
+    shipment.setShipName(assignedShip.getName());
+    shipment.setEstimatedArrival(estimatedArrival);
+
     shipmentRepository.save(shipment);
 
-    log.info("📦 NEW ORDER: [{}] {} → {} (route: {}) assigned to {}",
+    log.info("📦 NEW ORDER: [{}] {} → {} (route: {}) via {} assigned to {}",
         shipment.getLabel(), origin.getHubCode(), destination.getHubCode(),
-        routePathJson, shipment.getConsumerName());
+        routePathJson, assignedShip.getName(), shipment.getConsumerName());
   }
 
   @Scheduled(fixedRate = 30000)

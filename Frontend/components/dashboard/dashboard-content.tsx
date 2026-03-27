@@ -80,6 +80,15 @@ export default function DashboardContent() {
                         timestamp: new Date(),
                         read: false,
                     })
+                } else if (shipment.status === "SHELTERING") {
+                    newNotifications.push({
+                        id: `${shipment.shipmentId}-${Date.now()}`,
+                        type: "delayed",
+                        title: "Storm Alert",
+                        message: `${shipment.label} is sheltering from a storm.`,
+                        timestamp: new Date(),
+                        read: false,
+                    })
                 }
             } else if (!oldStatus) {
                 // New shipment appeared
@@ -134,6 +143,7 @@ export default function DashboardContent() {
         if (s.includes("transit")) return "in-transit"
         if (s.includes("deliver")) return "delivered"
         if (s.includes("delay")) return "delayed"
+        if (s.includes("shelter")) return "delayed"
         if (s.includes("pend")) return "pending"
         if (s.includes("queue")) return "pending"
         return s

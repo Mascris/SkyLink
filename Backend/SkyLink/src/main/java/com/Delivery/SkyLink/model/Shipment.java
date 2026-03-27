@@ -49,4 +49,13 @@ public class Shipment {
 
   @Column(name = "[container_id]")
   private String containerId;
+
+  @Column(name = "[ShipID]")
+  private Integer shipId;
+
+  @Column(name = "[ShipName]")
+  private String shipName;
+
+  @Column(name = "[EstimatedArrival]")
+  private LocalDateTime estimatedArrival;
 }

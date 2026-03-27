@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
-import { Package, Truck, CheckCircle, Clock, AlertCircle, ChevronRight, Search, Filter, X } from "lucide-react"
+import { Package, Truck, CheckCircle, Clock, AlertCircle, ChevronRight, Search, Filter, CloudLightning } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -29,6 +29,11 @@ const statusConfig: Record<string, { label: string; icon: React.ElementType; cla
     label: "Delayed",
     icon: AlertCircle,
     className: "bg-red-500/15 text-red-500 border-red-500/30",
+  },
+  "SHELTERING": {
+    label: "Sheltering",
+    icon: CloudLightning,
+    className: "bg-amber-500/15 text-amber-500 border-amber-500/30",
   },
 }
 
@@ -247,9 +252,23 @@ function ShipmentRow({ shipment, onClick }: { shipment: ApiShipment; onClick: ()
 
       {/* Footer Info */}
       <div className="mt-3 pt-3 border-t border-slate-800/50 flex justify-between items-center">
-        <span className="text-[10px] text-slate-500 truncate max-w-[150px]">
-          Recipient: <span className="text-slate-300 font-medium">{shipment.consumerName}</span>
-        </span>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] text-slate-500 truncate max-w-[160px]">
+            Recipient: <span className="text-slate-300 font-medium">{shipment.consumerName}</span>
+          </span>
+          {shipment.shipName && (
+            <span className="text-[10px] text-slate-500 truncate max-w-[160px]">
+              Vessel: <span className="text-blue-400 font-medium">{shipment.shipName}</span>
+            </span>
+          )}
+          {shipment.estimatedArrival && (
+            <span className="text-[10px] text-slate-500">
+              ETA: <span className="text-emerald-400 font-medium font-mono">
+                {new Date(shipment.estimatedArrival).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </span>
+          )}
+        </div>
         <span className="text-[10px] font-mono text-slate-600 italic">
           v21.0_Engine_Stable
         </span>

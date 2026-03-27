@@ -12,6 +12,9 @@ export interface Shipment {
   consumerName?: string;
   deliveryAddress?: string;
   containerId?: string;
+  shipId?: number;
+  shipName?: string;
+  estimatedArrival?: string;
 }
 
 export interface Hub {
