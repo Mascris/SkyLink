@@ -11,6 +11,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  CheckCircle,
+  Anchor,
+  Shield,
+  Navigation,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -31,9 +35,11 @@ interface TrackedShipment {
   origin: string
   destination: string
   status: string
+  rawStatus: string
   carrier: string
   eta: string
   progress: number
+  estimatedArrival?: string
 }
 
 function normalizeStatus(status: string): string {
@@ -41,16 +47,18 @@ function normalizeStatus(status: string): string {
   if (s.includes("transit")) return "in-transit"
   if (s.includes("deliver")) return "delivered"
   if (s.includes("delay")) return "delayed"
+  if (s.includes("shelter")) return "sheltering"
   if (s.includes("pend")) return "pending"
   if (s.includes("queue")) return "pending"
   return s
 }
 
 const statusColors: Record<string, string> = {
-  "in-transit": "bg-blue-500/20 text-blue-400",
-  delivered: "bg-emerald-500/20 text-emerald-400",
-  pending: "bg-amber-500/20 text-amber-400",
-  delayed: "bg-red-500/20 text-red-400",
+  "in-transit": "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  delivered: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  pending: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+  delayed: "bg-red-500/20 text-red-400 border-red-500/30",
+  sheltering: "bg-amber-500/20 text-amber-400 border-amber-500/30",
 }
 
 interface TrackingViewProps {
@@ -73,9 +81,11 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
       origin: s.currentHub || "N/A",
       destination: s.destinationHub || "N/A",
       status: normalizeStatus(s.status),
+      rawStatus: s.status,
       carrier: "SkyLink Logistics",
       eta: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "N/A",
       progress: s.progressPercent || 0,
+      estimatedArrival: s.estimatedArrival,
     }))
   }, [apiShipments])
 
@@ -142,47 +152,56 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
     return pages
   }
 
+  // Check if the selected shipment is delivered
+  const isDelivered = selectedShipment?.status === "delivered"
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Shipment Tracking</h1>
-        <p className="text-muted-foreground">Track your shipments in real-time</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
+            <Navigation className="w-7 h-7 text-cyan-400" />
+            Vessel Tracking
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Track your cargo across global shipping lanes</p>
+        </div>
       </div>
 
       {/* Search & Filters */}
-      <Card className="bg-card border-border">
+      <Card className="bg-card/80 backdrop-blur-sm border-cyan-500/10">
         <CardContent className="p-6">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  placeholder="Enter tracking number..."
+                  placeholder="Enter tracking number or port code..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value)
                     setCurrentPage(1)
                   }}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="pl-12 h-12 text-base bg-input border-border"
+                  className="pl-12 h-12 text-base bg-slate-800/50 border-slate-700 focus:ring-cyan-500/50 focus:border-cyan-500/50 font-mono"
                 />
               </div>
-              <Button onClick={handleSearch} className="h-12 px-8">
-                Track Shipment
+              <Button onClick={handleSearch} className="h-12 px-8 bg-cyan-600 hover:bg-cyan-500">
+                <Ship className="w-4 h-4 mr-2" />
+                Track Vessel
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-border/50">
+            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-700/50">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Filter className="w-4 h-4" />
-                <span>Filters:</span>
+                <Filter className="w-4 h-4 text-cyan-400" />
+                <span className="text-xs uppercase tracking-wider font-semibold">Filters:</span>
               </div>
 
               <div className="w-48">
                 <Select value={originFilter} onValueChange={(val) => { setOriginFilter(val); setCurrentPage(1); }}>
-                  <SelectTrigger className="bg-input border-border">
-                    <SelectValue placeholder="Origin Hub" />
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700">
+                    <SelectValue placeholder="Origin Port" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Origins</SelectItem>
@@ -197,8 +216,8 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
 
               <div className="w-48">
                 <Select value={destFilter} onValueChange={(val) => { setDestFilter(val); setCurrentPage(1); }}>
-                  <SelectTrigger className="bg-input border-border">
-                    <SelectValue placeholder="Destination Hub" />
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700">
+                    <SelectValue placeholder="Destination Port" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Destinations</SelectItem>
@@ -230,7 +249,9 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
         {/* Shipment List with Pagination */}
         <div className="lg:col-span-1 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-foreground">Shipments ({filteredShipments.length})</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              Manifests ({filteredShipments.length})
+            </h2>
           </div>
 
           <div className="space-y-3">
@@ -238,35 +259,38 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
               <Card
                 key={shipment.id}
                 className={cn(
-                  "bg-card border-border cursor-pointer transition-all hover:border-primary/50",
-                  selectedShipment?.id === shipment.id && "border-primary"
+                  "bg-card/80 backdrop-blur-sm cursor-pointer transition-all hover:border-cyan-500/30",
+                  selectedShipment?.id === shipment.id ? "border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.1)]" : "border-slate-700/50"
                 )}
                 onClick={() => setSelectedShipmentId(shipment.id)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <Ship className="w-4 h-4 text-muted-foreground" />
+                      <Ship className="w-4 h-4 text-cyan-400" />
                       <span className="font-mono text-sm text-foreground">{shipment.trackingNumber}</span>
                     </div>
-                    <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusColors[shipment.status] || "bg-gray-500/20 text-gray-400")}>
+                    <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase border", statusColors[shipment.status] || "bg-gray-500/20 text-gray-400")}>
                       {shipment.status.replace("-", " ")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span className="truncate">{shipment.origin}</span>
-                    <ArrowRight className="w-3 h-3 flex-shrink-0" />
+                    <ArrowRight className="w-3 h-3 flex-shrink-0 text-cyan-500" />
                     <span className="truncate">{shipment.destination}</span>
                   </div>
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-muted-foreground">Progress</span>
-                      <span className="text-foreground">{shipment.progress}%</span>
+                      <span className="text-foreground font-mono">{shipment.status === "delivered" ? "100" : shipment.progress}%</span>
                     </div>
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-primary rounded-full transition-all"
-                        style={{ width: `${shipment.progress}%` }}
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          shipment.status === "delivered" ? "bg-emerald-500" : "bg-cyan-500"
+                        )}
+                        style={{ width: `${shipment.status === "delivered" ? 100 : shipment.progress}%` }}
                       />
                     </div>
                   </div>
@@ -275,7 +299,7 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
             ))}
             {filteredShipments.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                No shipments found matching your filters.
+                No vessels found matching your filters.
               </div>
             )}
           </div>
@@ -286,7 +310,7 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 border-slate-700 bg-slate-800/50"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
               >
@@ -298,7 +322,10 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
                     key={index}
                     variant={currentPage === page ? "default" : "outline"}
                     size="icon"
-                    className="h-8 w-8"
+                    className={cn(
+                      "h-8 w-8",
+                      currentPage === page ? "bg-cyan-600 border-cyan-500" : "border-slate-700 bg-slate-800/50"
+                    )}
                     onClick={() => setCurrentPage(page)}
                   >
                     {page}
@@ -310,7 +337,7 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 border-slate-700 bg-slate-800/50"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
               >
@@ -323,111 +350,206 @@ export function TrackingView({ shipments: apiShipments, hubs }: TrackingViewProp
         {/* Tracking Details */}
         <div className="lg:col-span-2">
           {selectedShipment ? (
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            isDelivered ? (
+              /* ═══════════════════════════════════════════════════════════════
+                 DELIVERED — "Delivery Manifest Confirmed" Receipt UI
+                 ═══════════════════════════════════════════════════════════════ */
+              <Card className="bg-card/80 backdrop-blur-sm border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                <CardContent className="p-8">
+                  {/* Receipt Header */}
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 mb-4">
+                      <CheckCircle className="w-10 h-10 text-emerald-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-emerald-400 mb-1">Delivery Manifest Confirmed</h2>
+                    <p className="text-muted-foreground text-sm">Cargo has been successfully received at destination port</p>
+                  </div>
+
+                  {/* Receipt Body */}
+                  <div className="space-y-4 max-w-md mx-auto">
+                    <div className="border border-emerald-500/20 rounded-lg overflow-hidden">
+                      {/* Progress — Locked at 100% */}
+                      <div className="bg-emerald-500/10 px-4 py-3 border-b border-emerald-500/20">
+                        <div className="flex items-center justify-between text-sm mb-1.5">
+                          <span className="text-emerald-400 font-semibold">Shipment Progress</span>
+                          <span className="text-emerald-400 font-bold font-mono">100%</span>
+                        </div>
+                        <div className="h-2 bg-emerald-900/30 rounded-full overflow-hidden">
+                          <div className="h-full w-full bg-emerald-500 rounded-full" />
+                        </div>
+                      </div>
+
+                      {/* Receipt details */}
+                      <div className="divide-y divide-slate-700/50">
+                        <ReceiptRow label="Tracking Number" value={selectedShipment.trackingNumber} mono />
+                        <ReceiptRow label="Origin Port" value={selectedShipment.origin} />
+                        <ReceiptRow label="Destination Port" value={selectedShipment.destination} />
+                        <ReceiptRow label="Carrier" value={selectedShipment.carrier} />
+                        <ReceiptRow
+                          label="Touchdown Confirmed"
+                          value={
+                            selectedShipment.estimatedArrival
+                              ? new Date(selectedShipment.estimatedArrival).toLocaleString(undefined, {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                              : selectedShipment.eta
+                          }
+                          highlight
+                        />
+                      </div>
+                    </div>
+
+                    {/* Seal */}
+                    <div className="flex items-center justify-center gap-2 py-3">
+                      <Shield className="w-4 h-4 text-emerald-500/50" />
+                      <span className="text-[10px] font-mono text-emerald-500/50 uppercase tracking-widest">
+                        Verified by SkyLink Maritime Authority
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              /* ═══════════════════════════════════════════════════════════════
+                 NON-DELIVERED — Standard tracking detail card
+                 ═══════════════════════════════════════════════════════════════ */
+              <Card className="bg-card/80 backdrop-blur-sm border-cyan-500/10">
+                <CardHeader>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl font-mono text-cyan-400">{selectedShipment.trackingNumber}</CardTitle>
+                      <p className="text-muted-foreground mt-1">{selectedShipment.carrier}</p>
+                    </div>
+                    <span className={cn("px-3 py-1 rounded text-sm font-bold uppercase border w-fit", statusColors[selectedShipment.status] || "bg-gray-500/20 text-gray-400")}>
+                      {selectedShipment.status.replace("-", " ")}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Route Info */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-slate-800/30 rounded-lg border border-slate-700/30">
+                    <div className="flex-1">
+                      <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Origin Port</p>
+                      <div className="flex items-center gap-2">
+                        <Anchor className="w-4 h-4 text-cyan-400" />
+                        <span className="text-foreground font-medium">{selectedShipment.origin}</span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-cyan-500 hidden sm:block" />
+                    <div className="flex-1">
+                      <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Destination Port</p>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-emerald-400" />
+                        <span className="text-foreground font-medium">{selectedShipment.destination}</span>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">ETA</p>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-400" />
+                        <span className="text-foreground font-medium font-mono">
+                          {selectedShipment.estimatedArrival
+                            ? new Date(selectedShipment.estimatedArrival).toLocaleString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                            : selectedShipment.eta}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
                   <div>
-                    <CardTitle className="text-xl font-mono">{selectedShipment.trackingNumber}</CardTitle>
-                    <p className="text-muted-foreground mt-1">{selectedShipment.carrier}</p>
-                  </div>
-                  <span className={cn("px-3 py-1 rounded-full text-sm font-medium w-fit", statusColors[selectedShipment.status] || "bg-gray-500/20 text-gray-400")}>
-                    {selectedShipment.status.replace("-", " ")}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Route Info */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground mb-1">Origin</p>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      <span className="text-foreground font-medium">{selectedShipment.origin}</span>
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Shipment Progress</span>
+                      <span className="text-foreground font-mono font-bold">{selectedShipment.progress}%</span>
+                    </div>
+                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all"
+                        style={{ width: `${selectedShipment.progress}%` }}
+                      />
                     </div>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground hidden sm:block" />
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground mb-1">Destination</p>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-emerald-400" />
-                      <span className="text-foreground font-medium">{selectedShipment.destination}</span>
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground mb-1">ETA</p>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-foreground font-medium">{selectedShipment.eta}</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Progress Bar */}
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Shipment Progress</span>
-                    <span className="text-foreground font-medium">{selectedShipment.progress}%</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${selectedShipment.progress}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Timeline Placeholder */}
-                <div>
-                  <h3 className="text-sm font-medium text-foreground mb-4">Tracking History</h3>
-                  <div className="space-y-4">
-                    <div className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <CheckCircle2 className="w-5 h-5 text-primary" />
-                        <div className="w-0.5 flex-1 mt-2 bg-primary" />
-                      </div>
-                      <div className="flex-1 pb-4">
-                        <p className="font-medium text-foreground">Shipment Created</p>
-                        <p className="text-sm text-muted-foreground">{selectedShipment.origin}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{selectedShipment.eta}</p>
-                      </div>
-                    </div>
-                    {selectedShipment.progress >= 50 && (
+                  {/* Timeline */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-cyan-400" />
+                      Voyage Timeline
+                    </h3>
+                    <div className="space-y-4">
                       <div className="flex gap-4">
                         <div className="flex flex-col items-center">
-                          <CheckCircle2 className="w-5 h-5 text-primary" />
-                          <div className="w-0.5 flex-1 mt-2 bg-muted" />
+                          <CheckCircle2 className="w-5 h-5 text-cyan-400" />
+                          <div className="w-0.5 flex-1 mt-2 bg-cyan-500/50" />
                         </div>
                         <div className="flex-1 pb-4">
-                          <p className="font-medium text-foreground">In Transit</p>
-                          <p className="text-sm text-muted-foreground">On the way to destination</p>
+                          <p className="font-medium text-foreground">Manifest Registered</p>
+                          <p className="text-sm text-muted-foreground">{selectedShipment.origin}</p>
+                          <p className="text-xs text-muted-foreground mt-1 font-mono">{selectedShipment.eta}</p>
                         </div>
                       </div>
-                    )}
-                    <div className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <Circle className={cn("w-5 h-5", selectedShipment.progress >= 100 ? "text-primary" : "text-muted-foreground")} />
-                      </div>
-                      <div className="flex-1">
-                        <p className={cn("font-medium", selectedShipment.progress >= 100 ? "text-foreground" : "text-muted-foreground")}>
-                          Delivery
-                        </p>
-                        <p className="text-sm text-muted-foreground">{selectedShipment.destination}</p>
+                      {selectedShipment.progress >= 50 && (
+                        <div className="flex gap-4">
+                          <div className="flex flex-col items-center">
+                            <CheckCircle2 className="w-5 h-5 text-cyan-400" />
+                            <div className="w-0.5 flex-1 mt-2 bg-slate-700" />
+                          </div>
+                          <div className="flex-1 pb-4">
+                            <p className="font-medium text-foreground">Vessel Underway</p>
+                            <p className="text-sm text-muted-foreground">En route to destination port</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <Circle className={cn("w-5 h-5", selectedShipment.progress >= 100 ? "text-cyan-400" : "text-slate-600")} />
+                        </div>
+                        <div className="flex-1">
+                          <p className={cn("font-medium", selectedShipment.progress >= 100 ? "text-foreground" : "text-muted-foreground")}>
+                            Port Arrival
+                          </p>
+                          <p className="text-sm text-muted-foreground">{selectedShipment.destination}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )
           ) : (
-            <Card className="bg-card border-border h-full flex items-center justify-center">
+            <Card className="bg-card/80 backdrop-blur-sm border-cyan-500/10 h-full flex items-center justify-center">
               <CardContent className="text-center py-12">
-                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Select a shipment to see details</p>
+                <Ship className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Select a vessel to view tracking details</p>
               </CardContent>
             </Card>
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function ReceiptRow({ label, value, mono, highlight }: { label: string; value: string; mono?: boolean; highlight?: boolean }) {
+  return (
+    <div className="flex items-center justify-between px-4 py-2.5">
+      <span className="text-xs text-muted-foreground uppercase tracking-wider">{label}</span>
+      <span className={cn(
+        "text-sm font-medium",
+        highlight ? "text-emerald-400 font-bold" : "text-foreground",
+        mono && "font-mono"
+      )}>
+        {value}
+      </span>
     </div>
   )
 }

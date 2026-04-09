@@ -1,40 +1,19 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
-import { Package, Truck, CheckCircle, Clock, AlertCircle, ChevronRight, Search, Filter, CloudLightning } from "lucide-react"
+import { Package, Truck, CheckCircle, Clock, AlertCircle, ChevronRight, Search, Filter, CloudLightning, Container } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { type ApiShipment } from "./dashboard-content"
 
-// Map Java Backend Statuses to UI Labels and Colors
 const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
-  "TRANSIT": {
-    label: "In Transit",
-    icon: Truck,
-    className: "bg-blue-500/15 text-blue-500 border-blue-500/30",
-  },
-  "DELIVERED": {
-    label: "Delivered",
-    icon: CheckCircle,
-    className: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
-  },
-  "IN_QUEUE": {
-    label: "Pending",
-    icon: Clock,
-    className: "bg-amber-500/15 text-amber-500 border-amber-500/30",
-  },
-  "DELAYED": {
-    label: "Delayed",
-    icon: AlertCircle,
-    className: "bg-red-500/15 text-red-500 border-red-500/30",
-  },
-  "SHELTERING": {
-    label: "Sheltering",
-    icon: CloudLightning,
-    className: "bg-amber-500/15 text-amber-500 border-amber-500/30",
-  },
+  "TRANSIT": { label: "Underway", icon: Truck, className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+  "DELIVERED": { label: "Delivered", icon: CheckCircle, className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+  "IN_QUEUE": { label: "Queued", icon: Clock, className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+  "DELAYED": { label: "Delayed", icon: AlertCircle, className: "bg-red-500/15 text-red-400 border-red-500/30" },
+  "SHELTERING": { label: "Storm", icon: CloudLightning, className: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
 }
 
 interface ShipmentsListProps {
@@ -51,34 +30,33 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
 
-  // Update internal filter if external filter (from StatsCards) changes
   React.useEffect(() => {
     if (filterStatus) {
-      setSelectedStatuses([filterStatus.toUpperCase()])
+      const map: Record<string, string> = {
+        "in-transit": "TRANSIT", "delivered": "DELIVERED",
+        "pending": "IN_QUEUE", "delayed": "DELAYED",
+      }
+      setSelectedStatuses([map[filterStatus] || filterStatus.toUpperCase()])
     } else {
       setSelectedStatuses([])
     }
-    setCurrentPage(1) // Reset to first page on filter change
+    setCurrentPage(1)
   }, [filterStatus])
 
-  // Filter the live data from Java
   const filteredShipments = useMemo(() => {
-    if (!Array.isArray(apiShipments)) return [];
+    if (!Array.isArray(apiShipments)) return []
     return apiShipments.filter((s) => {
-      const searchLower = searchQuery.toLowerCase()
-      const matchesSearch = searchQuery === "" ||
-        s.shipmentId.toLowerCase().includes(searchLower) ||
-        s.label.toLowerCase().includes(searchLower) ||
-        (s.consumerName && s.consumerName.toLowerCase().includes(searchLower))
-
-      const matchesStatus = selectedStatuses.length === 0 ||
-        selectedStatuses.includes(s.status)
-
+      const q = searchQuery.toLowerCase()
+      const matchesSearch = !q ||
+        s.shipmentId?.toLowerCase().includes(q) ||
+        s.label?.toLowerCase().includes(q) ||
+        s.consumerName?.toLowerCase().includes(q) ||
+        s.containerId?.toLowerCase().includes(q)
+      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(s.status)
       return matchesSearch && matchesStatus
     })
   }, [apiShipments, searchQuery, selectedStatuses])
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredShipments.length / PAGE_SIZE)
   const paginatedShipments = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE
@@ -89,64 +67,61 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
     setSelectedStatuses(prev =>
       prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
     )
-    setCurrentPage(1) // Reset to first page on filter change
+    setCurrentPage(1)
   }
 
   return (
-    <Card className="h-full flex flex-col border-slate-800 bg-slate-950/50 backdrop-blur-sm">
-      <CardHeader className="pb-4">
+    <Card className="h-full flex flex-col border-cyan-900/30 bg-[#050b14]/70 backdrop-blur-md">
+      <CardHeader className="pb-3 border-b border-cyan-900/20">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-semibold text-white">Live Logistics Ledger</CardTitle>
-            <p className="text-xs text-slate-500 font-mono mt-1">REAL-TIME DATA STREAM ACTIVE</p>
+            <p className="text-[9px] font-mono tracking-widest text-cyan-500 uppercase mb-1">Live Logistics Ledger</p>
+            <CardTitle className="text-sm font-semibold text-white">Vessel Registry</CardTitle>
           </div>
-          <span className="text-xs font-mono bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20">
-            {apiShipments ? filteredShipments.length : 0} Active
-          </span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-[10px] font-mono text-cyan-500 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
+              {filteredShipments.length} Active
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-4">
+        <div className="flex items-center gap-2 mt-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
             <Input
-              placeholder="Search by ID, Cargo or Customer..."
-              className="pl-9 bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-600"
+              placeholder="ID, Cargo, Consignee..."
+              className="pl-8 h-8 text-xs bg-[#0a1628]/80 border-cyan-900/30 text-slate-200 placeholder:text-slate-600 focus:border-cyan-500/40 font-mono"
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
             />
           </div>
           <Button
             variant="outline"
             size="icon"
-            className={cn("border-slate-800 bg-slate-900 hover:bg-slate-800", showFilters && "border-blue-500")}
+            className={cn("h-8 w-8 border-cyan-900/30 bg-transparent hover:bg-cyan-500/5 hover:border-cyan-500/40", showFilters && "border-cyan-500/50 bg-cyan-500/5")}
             onClick={() => setShowFilters(!showFilters)}
           >
-            <Filter className="w-4 h-4 text-slate-400" />
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
           </Button>
         </div>
 
         {showFilters && (
-          <div className="mt-3 p-3 rounded-lg bg-slate-900/80 border border-slate-800 animate-in slide-in-from-top-2">
+          <div className="mt-2 p-2.5 rounded-lg bg-[#0a1628]/80 border border-cyan-900/30 animate-in slide-in-from-top-1">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-bold text-slate-500 uppercase">System Filters</p>
-              <button onClick={() => {
-                setSelectedStatuses([])
-                setCurrentPage(1)
-              }} className="text-[10px] text-blue-400 hover:underline">Clear</button>
+              <p className="text-[9px] font-mono tracking-widest text-cyan-500/70 uppercase">Status Filter</p>
+              <button onClick={() => { setSelectedStatuses([]); setCurrentPage(1) }} className="text-[9px] text-cyan-400 font-mono hover:underline">Clear</button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {Object.keys(statusConfig).map((status) => (
                 <button
                   key={status}
                   onClick={() => toggleStatus(status)}
                   className={cn(
-                    "px-2.5 py-1 text-[10px] font-bold rounded-md border transition-all",
+                    "px-2 py-0.5 text-[9px] font-mono font-bold rounded border tracking-wider transition-all uppercase",
                     selectedStatuses.includes(status)
-                      ? "bg-blue-600 border-blue-400 text-white"
-                      : "bg-slate-800 border-slate-700 text-slate-400"
+                      ? "bg-cyan-600/30 border-cyan-400/50 text-cyan-400"
+                      : "bg-[#1e293b] border-[#334155] text-slate-500 hover:text-slate-300"
                   )}
                 >
                   {status}
@@ -157,50 +132,31 @@ export function ShipmentsList({ apiShipments = [], onShipmentClick, filterStatus
         )}
       </CardHeader>
 
-      <CardContent className="flex-1 overflow-auto px-4 pb-4">
+      <CardContent className="flex-1 overflow-auto px-3 py-3">
         {paginatedShipments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-12 opacity-50">
-            <Package className="w-10 h-10 mb-2" />
-            <p className="text-sm font-mono">No Shipments Found in Current Radius</p>
+          <div className="flex flex-col items-center justify-center h-full py-12 opacity-40">
+            <Container className="w-8 h-8 mb-2 text-cyan-500" />
+            <p className="text-xs font-mono text-slate-500 tracking-widest uppercase">No Vessels in Radius</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {paginatedShipments.map((s) => (
-              <ShipmentRow
-                key={s.shipmentId}
-                shipment={s}
-                onClick={() => onShipmentClick(s)}
-              />
+              <ShipmentRow key={s.shipmentId} shipment={s} onClick={() => onShipmentClick(s)} />
             ))}
           </div>
         )}
       </CardContent>
 
-      {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="px-6 py-3 border-t border-slate-800 flex items-center justify-between bg-slate-900/20">
-          <p className="text-[10px] font-mono text-slate-500 uppercase">
-            Page {currentPage} of {totalPages}
+        <div className="px-4 py-2.5 border-t border-cyan-900/20 flex items-center justify-between bg-[#050b14]/40">
+          <p className="text-[9px] font-mono tracking-widest text-slate-600 uppercase">
+            {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredShipments.length)} of {filteredShipments.length}
           </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-[10px] border-slate-800 bg-slate-900 text-slate-400 hover:text-white"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-[10px] border-slate-800 bg-slate-900 text-slate-400 hover:text-white"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+          <div className="flex gap-1.5">
+            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-mono border-cyan-900/30 bg-transparent text-slate-400 hover:text-white hover:border-cyan-500/40"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>PREV</Button>
+            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-mono border-cyan-900/30 bg-transparent text-slate-400 hover:text-white hover:border-cyan-500/40"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>NEXT</Button>
           </div>
         </div>
       )}
@@ -215,63 +171,77 @@ function ShipmentRow({ shipment, onClick }: { shipment: ApiShipment; onClick: ()
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-4 rounded-xl bg-slate-900/40 border border-slate-800/50 hover:border-blue-500/50 hover:bg-slate-900/80 transition-all group relative overflow-hidden"
+      className={cn(
+        "w-full text-left p-3 rounded-lg border transition-all duration-200 group relative overflow-hidden",
+        // Glow hover effect — Task 2
+        "bg-[#0a1628]/60 border-[#1e293b]",
+        "hover:bg-[#0f1e35]/80 hover:border-cyan-500/50",
+        "hover:shadow-[0_0_12px_rgba(6,182,212,0.08),inset_0_0_20px_rgba(6,182,212,0.03)]",
+      )}
     >
-      {/* Background Progress Glow */}
+      {/* Bottom progress line */}
       <div
-        className="absolute bottom-0 left-0 h-[2px] bg-blue-500/50 transition-all duration-1000"
-        style={{ width: `${shipment.progressPercent}%` }}
+        className="absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-cyan-500/60 to-blue-500/40 transition-all duration-1000"
+        style={{ width: `${shipment.progressPercent ?? 0}%` }}
       />
 
       <div className="flex justify-between items-start">
-        <div className="flex gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
-            <Package className="w-5 h-5 text-slate-400" />
+        <div className="flex gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-md bg-[#0f172a] flex items-center justify-center shrink-0 border border-[#1e293b] group-hover:border-cyan-900/50 transition-colors">
+            <Package className="w-4 h-4 text-slate-500 group-hover:text-cyan-500/70 transition-colors" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-mono text-slate-500">#{shipment.shipmentId.substring(0, 8)}</span>
-              <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase flex items-center gap-1", config.className)}>
-                <StatusIcon className="w-2.5 h-2.5" />
+            <div className="flex items-center gap-1.5 mb-1">
+              {/* Mono ID — Task 1 */}
+              <span className="text-[9px] font-mono text-slate-600 tracking-widest">
+                #{shipment.shipmentId?.substring(0, 8).toUpperCase()}
+              </span>
+              <span className={cn("px-1.5 py-px rounded text-[8px] font-bold border uppercase flex items-center gap-0.5 tracking-wider", config.className)}>
+                <StatusIcon className="w-2 h-2" />
                 {config.label}
               </span>
             </div>
-            <h4 className="text-sm font-bold text-slate-200 truncate">{shipment.label}</h4>
-            <p className="text-xs text-slate-500 mt-1">
-              {shipment.currentHub} <span className="text-blue-500 mx-1">→</span> {shipment.destinationHub}
+            <h4 className="text-xs font-semibold text-slate-200 truncate max-w-[140px]">{shipment.label}</h4>
+            <p className="text-[10px] text-slate-500 mt-0.5 font-mono">
+              <span className="text-slate-600">{shipment.currentHub}</span>
+              <span className="text-cyan-600 mx-1">→</span>
+              <span className="text-slate-400">{shipment.destinationHub}</span>
             </p>
           </div>
         </div>
 
-        <div className="text-right flex flex-col items-end">
-          <p className="text-[10px] text-slate-500 uppercase font-bold">Progress</p>
-          <p className="text-sm font-mono text-blue-400">{shipment.progressPercent}%</p>
-          <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-blue-500 transition-colors mt-2" />
+        <div className="text-right flex flex-col items-end shrink-0 ml-2">
+          <p className="text-[8px] font-mono tracking-widest text-slate-600 uppercase">Progress</p>
+          <p className="text-sm font-mono font-bold text-cyan-400">{shipment.progressPercent ?? 0}%</p>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-cyan-500 transition-colors mt-1" />
         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="mt-3 pt-3 border-t border-slate-800/50 flex justify-between items-center">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[10px] text-slate-500 truncate max-w-[160px]">
-            Recipient: <span className="text-slate-300 font-medium">{shipment.consumerName}</span>
-          </span>
+      {/* Footer */}
+      <div className="mt-2.5 pt-2 border-t border-[#1e293b]/70 flex justify-between items-center">
+        <div className="space-y-0.5">
+          {shipment.consumerName && (
+            <p className="text-[9px] text-slate-500 font-mono">
+              RCPT <span className="text-slate-300">{shipment.consumerName}</span>
+            </p>
+          )}
           {shipment.shipName && (
-            <span className="text-[10px] text-slate-500 truncate max-w-[160px]">
-              Vessel: <span className="text-blue-400 font-medium">{shipment.shipName}</span>
-            </span>
+            <p className="text-[9px] text-slate-500 font-mono">
+              VSL <span className="text-cyan-400">{shipment.shipName}</span>
+            </p>
           )}
           {shipment.estimatedArrival && (
-            <span className="text-[10px] text-slate-500">
-              ETA: <span className="text-emerald-400 font-medium font-mono">
+            <p className="text-[9px] text-slate-500 font-mono">
+              ETA <span className="text-emerald-400">
                 {new Date(shipment.estimatedArrival).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
               </span>
-            </span>
+            </p>
+          )}
+          {shipment.containerId && (
+            <p className="text-[9px] font-mono tracking-widest text-slate-600">{shipment.containerId}</p>
           )}
         </div>
-        <span className="text-[10px] font-mono text-slate-600 italic">
-          v21.0_Engine_Stable
-        </span>
+        <span className="text-[8px] font-mono text-slate-700 italic self-end">v21.0_Engine</span>
       </div>
     </button>
   )

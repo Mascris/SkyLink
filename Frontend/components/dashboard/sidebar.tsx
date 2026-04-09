@@ -2,43 +2,23 @@
 
 import React from "react"
 import {
-  LayoutDashboard,
-  Package,
-  Truck,
-  Globe,
-  BarChart3,
-  Settings,
-  Users,
-  FileText,
-  Bell,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  PlusCircle,
+  Radar, Anchor, Users, Bell,
+  ChevronLeft, ChevronRight,
+  PlusCircle, Container, Activity, Layers,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface NavItem {
-  icon: React.ElementType
-  label: string
-  id: string
-  badge?: number
-  highlight?: boolean
+  icon: React.ElementType; label: string; id: string; badge?: number; highlight?: boolean
 }
 
 const navItems: NavItem[] = [
-  { icon: LayoutDashboard, label: "Overview", id: "overview" },
-  { icon: PlusCircle, label: "Add Shipment", id: "add-shipment", highlight: true },
-  { icon: Package, label: "Shipments", id: "shipments" },
-  { icon: Truck, label: "Fleet", id: "fleet" },
-  { icon: Globe, label: "Tracking", id: "tracking" },
-  { icon: BarChart3, label: "Analytics", id: "analytics" },
-  { icon: Users, label: "Customers", id: "customers" },
-  { icon: FileText, label: "Reports", id: "reports" },
-]
-
-const bottomItems: NavItem[] = [
-  { icon: Bell, label: "Notifications", id: "notifications", badge: 3 },
+  { icon: Radar, label: "Command Center", id: "overview" },
+  { icon: PlusCircle, label: "New Manifest", id: "add-shipment", highlight: true },
+  { icon: Container, label: "Container Inventory", id: "shipments" },
+  { icon: Layers, label: "Live Global Radar", id: "tracking" },
+  { icon: Activity, label: "Telemetry & Intelligence", id: "telemetry" },
+  { icon: Users, label: "Corporate Partners", id: "customers" },
 ]
 
 interface SidebarProps {
@@ -51,130 +31,100 @@ interface SidebarProps {
 export function Sidebar({ activeView, onViewChange, onNotificationsClick, notificationCount = 0 }: SidebarProps) {
   const [collapsed, setCollapsed] = React.useState(false)
 
-  const handleNavClick = (item: NavItem) => {
-    if (item.id === "notifications") {
-      onNotificationsClick()
-    } else {
-      onViewChange(item.id)
-    }
-  }
-
   return (
-    <aside
-      className={cn(
-        "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
-      )}
-    >
+    <aside className={cn(
+      "flex flex-col h-screen border-r border-cyan-900/40 transition-all duration-300 shrink-0",
+      "bg-[#050b14]/70 backdrop-blur-md",
+      collapsed ? "w-14" : "w-60"
+    )}>
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary">
-            <Globe className="w-5 h-5 text-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <span className="text-lg font-semibold text-sidebar-foreground">
-              SkyLink
-            </span>
-          )}
+      <div className={cn("flex items-center h-14 border-b border-cyan-900/30", collapsed ? "justify-center px-0" : "px-4 gap-3")}>
+        <div className="relative flex items-center justify-center w-7 h-7 rounded-md bg-cyan-500/15 border border-cyan-500/30 shrink-0">
+          <Anchor className="w-4 h-4 text-cyan-400" />
+          <div className="absolute inset-0 rounded-md maritime-glow" />
         </div>
+        {!collapsed && (
+          <div>
+            <span className="text-sm font-bold text-cyan-400 tracking-tight leading-none">SkyLink</span>
+            <p className="text-[8px] font-mono text-slate-600 uppercase tracking-widest mt-0.5">Maritime Net</p>
+          </div>
+        )}
       </div>
 
-      {/* Main Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      {/* Nav */}
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => (
           <NavButton
             key={item.id}
             item={item}
             collapsed={collapsed}
             isActive={activeView === item.id}
-            onClick={() => handleNavClick(item)}
+            onClick={() => onViewChange(item.id)}
           />
         ))}
       </nav>
 
-      {/* Bottom Navigation */}
-      <div className="px-3 py-4 space-y-1 border-t border-sidebar-border">
-        {bottomItems.map((item) => (
-          <NavButton
-            key={item.id}
-            item={{ ...item, badge: item.id === "notifications" ? (notificationCount || undefined) : item.badge }}
-            collapsed={collapsed}
-            isActive={activeView === item.id}
-            onClick={() => handleNavClick(item)}
-          />
-        ))}
+      {/* Bell */}
+      <div className="px-2 py-1 border-t border-cyan-900/20">
+        <NavButton
+          item={{ icon: Bell, label: "Notifications", id: "notifications", badge: notificationCount || undefined }}
+          collapsed={collapsed}
+          isActive={false}
+          onClick={onNotificationsClick}
+        />
+      </div>
 
-        {/* User Profile */}
-        <div className={cn(
-          "flex items-center gap-3 px-3 py-2 mt-4 rounded-lg bg-sidebar-accent",
-          collapsed && "justify-center px-2"
-        )}>
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-medium">
-            AS
-          </div>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">Amine Serrar</p>
-              <p className="text-xs text-muted-foreground truncate">Operations Manager</p>
-            </div>
-          )}
-          {!collapsed && (
-            <button
-              className="p-1.5 rounded-md hover:bg-muted transition-colors"
-              aria-label="Log out"
-            >
-              <LogOut className="w-4 h-4 text-muted-foreground" />
-            </button>
-          )}
+      {/* Avatar */}
+      <div className={cn(
+        "flex items-center gap-2.5 mx-2 mb-2 px-2 py-2 rounded-md border border-cyan-900/20 bg-[#0f172a]/40",
+        collapsed && "justify-center"
+      )}>
+        <div className="flex items-center justify-center w-7 h-7 rounded-md bg-cyan-500/15 text-cyan-400 text-[10px] font-bold border border-cyan-500/20 shrink-0">
+          AS
         </div>
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-300 truncate">Amine Serrar</p>
+            <p className="text-[9px] text-slate-500 font-mono tracking-widest truncate uppercase">Fleet Commander</p>
+          </div>
+        )}
       </div>
 
       {/* Collapse Toggle */}
       <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center h-10 border-t border-sidebar-border hover:bg-sidebar-accent transition-colors"
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        onClick={() => setCollapsed(c => !c)}
+        className="flex items-center justify-center h-8 border-t border-cyan-900/20 hover:bg-cyan-500/5 transition-colors"
       >
-        {collapsed ? (
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        ) : (
-          <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-        )}
+        {collapsed ? <ChevronRight className="w-3.5 h-3.5 text-slate-500" /> : <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />}
       </button>
     </aside>
   )
 }
 
-interface NavButtonProps {
-  item: NavItem
-  collapsed: boolean
-  isActive: boolean
-  onClick: () => void
-}
-
-function NavButton({ item, collapsed, isActive, onClick }: NavButtonProps) {
+function NavButton({ item, collapsed, isActive, onClick }: {
+  item: NavItem; collapsed: boolean; isActive: boolean; onClick: () => void
+}) {
   const Icon = item.icon
-
   return (
     <button
       onClick={onClick}
+      title={collapsed ? item.label : undefined}
       className={cn(
-        "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-colors text-left",
+        "flex items-center gap-2.5 w-full px-2 py-2 rounded-md transition-all text-left group",
         item.highlight && !isActive
-          ? "bg-primary/10 text-primary hover:bg-primary/20"
+          ? "bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/15 border border-cyan-500/20"
           : isActive
-            ? "bg-sidebar-accent text-sidebar-foreground"
-            : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
-        collapsed && "justify-center px-2"
+            ? "bg-[#0f172a]/80 text-cyan-400 border border-cyan-500/25"
+            : "text-slate-500 hover:bg-[#0f172a]/60 hover:text-slate-300 border border-transparent hover:border-cyan-900/30",
+        collapsed && "justify-center"
       )}
     >
-      <Icon className={cn("w-5 h-5 flex-shrink-0", item.highlight && !isActive && "text-primary")} />
+      <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-cyan-400" : "group-hover:text-slate-300")} />
       {!collapsed && (
         <>
-          <span className="flex-1 text-sm font-medium">{item.label}</span>
+          <span className="flex-1 text-xs font-medium truncate">{item.label}</span>
           {item.badge && (
-            <span className="flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-medium rounded-full bg-primary text-primary-foreground">
+            <span className="flex items-center justify-center min-w-4 h-4 px-1 text-[9px] font-bold rounded-full bg-cyan-500 text-black">
               {item.badge}
             </span>
           )}

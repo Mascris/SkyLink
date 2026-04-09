@@ -1,5 +1,5 @@
 import React from "react"
-import { Package, Truck, CheckCircle, AlertTriangle } from "lucide-react"
+import { Container, Ship, Anchor, AlertTriangle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -20,35 +20,39 @@ interface StatsCardsProps {
 export function StatsCards({ onFilterClick, activeFilter, stats }: StatsCardsProps) {
   const statCards = [
     {
-      title: "Total Shipments",
+      title: "Total Cargo",
       value: stats.total.toLocaleString(),
-      icon: Package,
-      iconBg: "bg-primary/15",
-      iconColor: "text-primary",
+      icon: Container,
+      iconBg: "bg-cyan-500/15",
+      iconColor: "text-cyan-400",
+      borderColor: "border-cyan-500/20",
       filterId: null as FilterType,
     },
     {
-      title: "In Transit",
+      title: "Vessels Active",
       value: stats.inTransit.toLocaleString(),
-      icon: Truck,
+      icon: Ship,
       iconBg: "bg-blue-500/15",
       iconColor: "text-blue-400",
+      borderColor: "border-blue-500/20",
       filterId: "in-transit" as FilterType,
     },
     {
-      title: "Delivered",
+      title: "Port Delivered",
       value: stats.delivered.toLocaleString(),
-      icon: CheckCircle,
+      icon: Anchor,
       iconBg: "bg-emerald-500/15",
       iconColor: "text-emerald-400",
+      borderColor: "border-emerald-500/20",
       filterId: "delivered" as FilterType,
     },
     {
-      title: "Delayed",
+      title: "Storm Delayed",
       value: stats.delayed.toLocaleString(),
       icon: AlertTriangle,
       iconBg: "bg-amber-500/15",
       iconColor: "text-amber-400",
+      borderColor: "border-amber-500/20",
       filterId: "delayed" as FilterType,
     },
   ]
@@ -63,26 +67,29 @@ export function StatsCards({ onFilterClick, activeFilter, stats }: StatsCardsPro
           <Card
             key={stat.title}
             className={cn(
-              "group cursor-pointer transition-all",
+              "group cursor-pointer transition-all duration-300 bg-card/80 backdrop-blur-sm",
               isActive
-                ? "border-primary/50 bg-primary/5"
-                : "hover:border-primary/30"
+                ? "border-cyan-500/50 bg-cyan-500/5 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                : `hover:${stat.borderColor} hover:shadow-[0_0_10px_rgba(6,182,212,0.1)]`
             )}
             onClick={() => onFilterClick(stat.filterId === activeFilter ? null : stat.filterId)}
           >
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
-                <div className={`flex items-center justify-center w-11 h-11 rounded-lg ${stat.iconBg}`}>
+                <div className={`flex items-center justify-center w-11 h-11 rounded-lg ${stat.iconBg} border ${stat.borderColor}`}>
                   <Icon className={`w-5 h-5 ${stat.iconColor}`} />
                 </div>
+                {isActive && (
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 maritime-glow" />
+                )}
               </div>
               <div className="mt-4">
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-2xl font-bold text-foreground font-mono">{stat.value}</p>
                 <p className="text-sm text-muted-foreground mt-1">{stat.title}</p>
               </div>
               {isActive && (
-                <div className="mt-3 pt-3 border-t border-border">
-                  <p className="text-xs text-primary">Click to clear filter</p>
+                <div className="mt-3 pt-3 border-t border-cyan-500/20">
+                  <p className="text-xs text-cyan-400 font-mono uppercase">Click to clear filter</p>
                 </div>
               )}
             </CardContent>

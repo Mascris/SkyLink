@@ -3,87 +3,91 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════════════════
+   MARITIME RADAR COMMAND CENTER — SkyLink Design System v2
+   ═══════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --background: oklch(0.09 0 0);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.13 0 0);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.13 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.7 0.15 160);
-  --primary-foreground: oklch(0.1 0 0);
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.9 0 0);
-  --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.7 0.15 160);
-  --accent-foreground: oklch(0.1 0 0);
-  --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.22 0 0);
-  --input: oklch(0.18 0 0);
-  --ring: oklch(0.7 0.15 160);
-  --chart-1: oklch(0.7 0.15 160);
-  --chart-2: oklch(0.65 0.18 250);
-  --chart-3: oklch(0.7 0.2 45);
-  --chart-4: oklch(0.65 0.2 330);
-  --chart-5: oklch(0.7 0.15 200);
+  --background: #050b14;
+  --foreground: #e2e8f0;
+  --card: #0f172a;
+  --card-foreground: #e2e8f0;
+  --popover: #0f172a;
+  --popover-foreground: #e2e8f0;
+  --primary: #06b6d4;
+  --primary-foreground: #050b14;
+  --secondary: #1e293b;
+  --secondary-foreground: #cbd5e1;
+  --muted: #1e293b;
+  --muted-foreground: #64748b;
+  --accent: #06b6d4;
+  --accent-foreground: #050b14;
+  --destructive: #ef4444;
+  --destructive-foreground: #e2e8f0;
+  --border: #1e293b;
+  --input: #0f172a;
+  --ring: #06b6d4;
+  --chart-1: #06b6d4;
+  --chart-2: #3b82f6;
+  --chart-3: #f59e0b;
+  --chart-4: #10b981;
+  --chart-5: #8b5cf6;
   --radius: 0.5rem;
-  --sidebar: oklch(0.11 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.7 0.15 160);
-  --sidebar-primary-foreground: oklch(0.1 0 0);
-  --sidebar-accent: oklch(0.18 0 0);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.22 0 0);
-  --sidebar-ring: oklch(0.7 0.15 160);
-  --success: oklch(0.7 0.18 145);
-  --success-foreground: oklch(0.1 0 0);
-  --warning: oklch(0.75 0.18 80);
-  --warning-foreground: oklch(0.1 0 0);
-  --info: oklch(0.65 0.15 250);
-  --info-foreground: oklch(0.95 0 0);
+  --sidebar: #030712;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #06b6d4;
+  --sidebar-primary-foreground: #050b14;
+  --sidebar-accent: #0f172a;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #06b6d4;
+  --success: #10b981;
+  --success-foreground: #050b14;
+  --warning: #f59e0b;
+  --warning-foreground: #050b14;
+  --info: #3b82f6;
+  --info-foreground: #e2e8f0;
 }
 
 .dark {
-  --background: oklch(0.09 0 0);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.13 0 0);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.13 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.7 0.15 160);
-  --primary-foreground: oklch(0.1 0 0);
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.9 0 0);
-  --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.7 0.15 160);
-  --accent-foreground: oklch(0.1 0 0);
-  --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.22 0 0);
-  --input: oklch(0.18 0 0);
-  --ring: oklch(0.7 0.15 160);
-  --chart-1: oklch(0.7 0.15 160);
-  --chart-2: oklch(0.65 0.18 250);
-  --chart-3: oklch(0.7 0.2 45);
-  --chart-4: oklch(0.65 0.2 330);
-  --chart-5: oklch(0.7 0.15 200);
-  --sidebar: oklch(0.11 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.7 0.15 160);
-  --sidebar-primary-foreground: oklch(0.1 0 0);
-  --sidebar-accent: oklch(0.18 0 0);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.22 0 0);
-  --sidebar-ring: oklch(0.7 0.15 160);
-  --success: oklch(0.7 0.18 145);
-  --success-foreground: oklch(0.1 0 0);
-  --warning: oklch(0.75 0.18 80);
-  --warning-foreground: oklch(0.1 0 0);
-  --info: oklch(0.65 0.15 250);
-  --info-foreground: oklch(0.95 0 0);
+  --background: #050b14;
+  --foreground: #e2e8f0;
+  --card: #0f172a;
+  --card-foreground: #e2e8f0;
+  --popover: #0f172a;
+  --popover-foreground: #e2e8f0;
+  --primary: #06b6d4;
+  --primary-foreground: #050b14;
+  --secondary: #1e293b;
+  --secondary-foreground: #cbd5e1;
+  --muted: #1e293b;
+  --muted-foreground: #64748b;
+  --accent: #06b6d4;
+  --accent-foreground: #050b14;
+  --destructive: #ef4444;
+  --destructive-foreground: #e2e8f0;
+  --border: #1e293b;
+  --input: #0f172a;
+  --ring: #06b6d4;
+  --chart-1: #06b6d4;
+  --chart-2: #3b82f6;
+  --chart-3: #f59e0b;
+  --chart-4: #10b981;
+  --chart-5: #8b5cf6;
+  --sidebar: #030712;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #06b6d4;
+  --sidebar-primary-foreground: #050b14;
+  --sidebar-accent: #0f172a;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #06b6d4;
+  --success: #10b981;
+  --success-foreground: #050b14;
+  --warning: #f59e0b;
+  --warning-foreground: #050b14;
+  --info: #3b82f6;
+  --info-foreground: #e2e8f0;
 }
 
 @theme inline {
@@ -137,7 +141,161 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html,
+  body {
+    background-color: #050b14 !important;
+    color: #e2e8f0;
+  }
+
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MARITIME ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════ */
+@keyframes radar-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 12px 4px rgba(6, 182, 212, 0.2);
+  }
+}
+
+@keyframes storm-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 4px 2px rgba(245, 158, 11, 0.6);
+    background-color: #f59e0b;
+  }
+
+  50% {
+    box-shadow: 0 0 12px 6px rgba(239, 68, 68, 0.8);
+    background-color: #ef4444;
+  }
+}
+
+@keyframes sonar-sweep {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes manifest-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.maritime-glow {
+  animation: radar-pulse 2s ease-in-out infinite;
+}
+
+.storm-marker {
+  animation: storm-pulse 1s ease-in-out infinite;
+}
+
+.sonar-ring {
+  animation: sonar-sweep 2s ease-out infinite;
+}
+
+.manifest-panel {
+  animation: manifest-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Focused vessel sonar ping — 3 expanding rings ─────────────────── */
+@keyframes sonar-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+.focused-ship-marker {
+  position: relative;
+}
+
+.focused-ship-marker::before,
+.focused-ship-marker::after,
+.focused-ship-marker .ping-ring {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 1.5px solid #06b6d4;
+  animation: sonar-ping 2s ease-out infinite;
+  pointer-events: none;
+}
+
+.focused-ship-marker::after {
+  animation-delay: 0.65s;
+}
+
+.focused-ship-marker .ping-ring {
+  animation-delay: 1.3s;
+}
+
+/* Leaflet popup overrides — Maritime theme */
+.leaflet-popup-content-wrapper {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background: #0f172a !important;
+}
+
+.leaflet-popup-content {
+  color: #e2e8f0 !important;
+}
+
+.leaflet-popup-content p {
+  margin: 4px 0 !important;
+}
+
+/* Thin scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050b14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }

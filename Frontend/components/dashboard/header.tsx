@@ -1,10 +1,7 @@
 "use client"
 
 import React from "react"
-
-import { useState } from "react"
-import { Search, Bell, Calendar, X, Command, Activity, Keyboard } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Bell, Calendar, Command } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface HeaderProps {
@@ -14,147 +11,63 @@ interface HeaderProps {
   onActivityFeed: () => void
   onKeyboardShortcuts: () => void
   title: string
+  notificationCount?: number
 }
 
-export function Header({ onNotificationsClick, onSearch, onCommandPalette, onActivityFeed, onKeyboardShortcuts, title }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showSearch, setShowSearch] = useState(false)
-
+export function Header({
+  onNotificationsClick,
+  onCommandPalette,
+  title,
+  notificationCount = 0,
+}: HeaderProps) {
   const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
+    weekday: "short",
     year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
   })
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSearch(searchQuery)
-  }
-
-  const clearSearch = () => {
-    setSearchQuery("")
-    onSearch("")
-  }
-
   return (
-    <header className="flex items-center justify-between h-16 px-6 border-b border-border bg-background">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-          <Calendar className="w-3.5 h-3.5" />
-          <span>{today}</span>
+    <header className="flex items-center justify-between h-14 px-6 border-b border-[#1e293b] bg-[#050b14] shrink-0">
+      {/* Left — Title + date */}
+      <div className="flex items-center gap-4">
+        <div>
+          <h1 className="text-sm font-semibold text-white uppercase tracking-widest">{title}</h1>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono mt-0.5">
+            <Calendar className="w-3 h-3" />
+            <span>{today}</span>
+            <span className="mx-1 text-slate-700">·</span>
+            <span className="text-cyan-500/60">UTC {new Date().toISOString().slice(11, 19)}</span>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* Mobile Search Toggle */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="md:hidden bg-transparent"
-          onClick={() => setShowSearch(!showSearch)}
-        >
-          <Search className="w-4 h-4" />
-          <span className="sr-only">Search</span>
-        </Button>
-
-        {/* Desktop Search */}
-        <form onSubmit={handleSearch} className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            className="w-64 pl-9 pr-9 bg-secondary border-border"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </form>
-
-
-        {/* Command Palette Trigger */}
-        <Button
-          variant="outline"
-          className="hidden md:flex items-center gap-2 bg-transparent text-muted-foreground hover:text-foreground"
+      {/* Right — Actions */}
+      <div className="flex items-center gap-2">
+        {/* Command Palette trigger */}
+        <button
           onClick={onCommandPalette}
+          className="hidden md:flex items-center gap-2 h-8 px-3 rounded-lg bg-[#0f172a] border border-[#1e293b] text-slate-500 hover:text-cyan-400 hover:border-cyan-500/30 transition-all text-xs font-mono"
         >
-          <Command className="w-4 h-4" />
-          <span className="text-sm">Search...</span>
-          <kbd className="ml-2 rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">⌘K</kbd>
-        </Button>
+          <Command className="w-3.5 h-3.5" />
+          <span>⌘K</span>
+        </button>
 
-        {/* Keyboard Shortcuts */}
+        {/* Bell / Notifications */}
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="hidden md:flex bg-transparent"
-          onClick={onKeyboardShortcuts}
-        >
-          <Keyboard className="w-4 h-4" />
-          <span className="sr-only">Keyboard Shortcuts</span>
-        </Button>
-
-        {/* Activity Feed */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="relative bg-transparent"
-          onClick={onActivityFeed}
-        >
-          <Activity className="w-4 h-4" />
-          <span className="absolute -top-1 -right-1 flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-          </span>
-          <span className="sr-only">Activity Feed</span>
-        </Button>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="relative bg-transparent"
+          className="relative w-8 h-8 text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/5"
           onClick={onNotificationsClick}
         >
           <Bell className="w-4 h-4" />
-          <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-medium bg-destructive text-destructive-foreground rounded-full">
-            3
-          </span>
-          <span className="sr-only">Notifications</span>
+          {notificationCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-[9px] font-bold bg-cyan-500 text-black rounded-full">
+              {notificationCount > 9 ? "9+" : notificationCount}
+            </span>
+          )}
         </Button>
       </div>
-
-      {/* Mobile Search Overlay */}
-      {showSearch && (
-        <div className="absolute inset-x-0 top-16 p-4 bg-background border-b border-border md:hidden z-40">
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search shipments, customers..."
-              className="w-full pl-9 pr-9 bg-secondary border-border"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </form>
-        </div>
-      )}
     </header>
   )
 }
