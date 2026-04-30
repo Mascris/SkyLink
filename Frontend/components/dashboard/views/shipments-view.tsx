@@ -13,11 +13,11 @@ import { type Shipment as ApiShipment } from "@/lib/api"
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_MAP: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  TRANSIT: { label: "Underway", color: "text-blue-400 bg-blue-500/10 border-blue-500/25", icon: Ship },
-  DELIVERED: { label: "Delivered", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/25", icon: CheckCircle },
-  IN_QUEUE: { label: "Queued", color: "text-slate-400 bg-slate-500/10 border-slate-500/25", icon: Clock },
-  DELAYED: { label: "Delayed", color: "text-red-400 bg-red-500/10 border-red-500/25", icon: AlertTriangle },
-  SHELTERING: { label: "Sheltering", color: "text-amber-400 bg-amber-500/10 border-amber-500/25", icon: CloudLightning },
+  TRANSIT: { label: "Underway", color: "text-blue-500 bg-blue-500/10 border-blue-500/30", icon: Ship },
+  DELIVERED: { label: "Delivered", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/30", icon: CheckCircle },
+  IN_QUEUE: { label: "Queued", color: "text-muted-foreground bg-muted border-border", icon: Clock },
+  DELAYED: { label: "Delayed", color: "text-red-500 bg-red-500/10 border-red-500/30", icon: AlertTriangle },
+  SHELTERING: { label: "Sheltering", color: "text-amber-500 bg-amber-500/10 border-amber-500/30", icon: CloudLightning },
 }
 
 const PAGE_SIZE = 15
@@ -44,18 +44,18 @@ function ContainerDetailDrawer({ shipment, onClose }: { shipment: ApiShipment | 
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[520px] flex flex-col bg-[#07101f] border-l border-[#1e293b] manifest-panel shadow-2xl">
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[520px] flex flex-col bg-card border-l border-border manifest-panel shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1e293b] bg-[#050b14] shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/50 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/25">
-              <Container className="w-5 h-5 text-cyan-400" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <Container className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-[9px] font-mono tracking-widest text-cyan-500 uppercase">Container Deep-Dive</p>
-              <h2 className="text-sm font-bold text-white font-mono">{shipment.containerId || "—"}</h2>
+              <p className="text-[9px] font-mono tracking-widest text-blue-400 uppercase">Container Deep-Dive</p>
+              <h2 className="text-sm font-bold text-foreground font-mono">{shipment.containerId || "—"}</h2>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
@@ -63,7 +63,7 @@ function ContainerDetailDrawer({ shipment, onClose }: { shipment: ApiShipment | 
               <StatusIcon className="w-3 h-3" />
               {cfg.label}
             </span>
-            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded text-slate-500 hover:text-white hover:bg-[#1e293b] transition-colors">
+            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -73,35 +73,29 @@ function ContainerDetailDrawer({ shipment, onClose }: { shipment: ApiShipment | 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
 
           {/* Large Container ID block */}
-          <div className="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5">
-            <p className="text-[9px] font-mono tracking-widest text-cyan-500 uppercase mb-2">Container Identifier</p>
+          <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/10">
+            <p className="text-[9px] font-mono tracking-widest text-blue-400 uppercase mb-2">Container Identifier</p>
             <div className="flex items-end gap-3">
-              <p className="text-3xl font-bold font-mono text-cyan-400">{shipment.containerId || "CONT-UNKNOWN"}</p>
+              <p className="text-3xl font-bold font-mono text-blue-400">{shipment.containerId || "CONT-UNKNOWN"}</p>
               <div className="mb-1 flex flex-col gap-0.5">
-                <span className="text-[9px] font-mono text-slate-500">TYPE</span>
-                <span className="text-xs font-bold text-slate-300">{hashTEU(shipment.shipmentId)}</span>
+                <span className="text-[9px] font-mono text-muted-foreground">TYPE</span>
+                <span className="text-xs font-bold text-foreground">{hashTEU(shipment.shipmentId)}</span>
               </div>
             </div>
             <div className="mt-2 flex items-center gap-3">
-              <span className="text-[10px] font-mono text-slate-500">{hashTEUnum(shipment.shipmentId)} TEU</span>
-              <span className="text-slate-700">·</span>
-              <span className="text-[10px] font-mono text-slate-500">{hashWeight(shipment.shipmentId)}</span>
-              <span className="text-slate-700">·</span>
-              <span className="text-[10px] font-mono text-slate-500">{hashCargo(shipment.shipmentId)}</span>
+              <span className="text-[10px] font-mono text-muted-foreground">{hashTEUnum(shipment.shipmentId)} TEU</span>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="text-[10px] font-mono text-muted-foreground">{hashWeight(shipment.shipmentId)}</span>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="text-[10px] font-mono text-muted-foreground">{hashCargo(shipment.shipmentId)}</span>
             </div>
           </div>
 
           {/* 2-column grid */}
           <div className="grid grid-cols-2 gap-3">
-
-            {/* Cargo */}
             <DetailCell icon={Hash} label="Cargo Label" value={shipment.label} full />
-
-            {/* Route */}
             <DetailCell icon={Navigation} label="Origin Port" value={shipment.currentHub} />
             <DetailCell icon={MapPin} label="Destination" value={shipment.destinationHub} />
-
-            {/* Telemetry */}
             <DetailCell icon={Globe} label="Latitude" value={shipment.currentLat?.toFixed(5) ?? "—"} mono />
             <DetailCell icon={Globe} label="Longitude" value={shipment.currentLng?.toFixed(5) ?? "—"} mono />
             <DetailCell icon={Signal} label="Progress" value={`${shipment.progressPercent ?? 0}%`} mono accent />
@@ -114,52 +108,52 @@ function ContainerDetailDrawer({ shipment, onClose }: { shipment: ApiShipment | 
           </div>
 
           {/* Voyage progress bar */}
-          <div className="p-3 rounded-lg border border-[#1e293b] bg-[#0f172a]">
-            <div className="flex justify-between text-[9px] font-mono text-slate-500 mb-2 uppercase tracking-widest">
+          <div className="p-3 rounded-lg border border-border bg-muted/50">
+            <div className="flex justify-between text-[9px] font-mono text-muted-foreground mb-2 uppercase tracking-widest">
               <span>Voyage Progress</span>
-              <span className="text-cyan-400">{shipment.progressPercent ?? 0}%</span>
+              <span className="text-blue-400">{shipment.progressPercent ?? 0}%</span>
             </div>
-            <div className="h-2 bg-[#1e293b] rounded-full overflow-hidden">
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-cyan-600 to-blue-500 rounded-full transition-all duration-700"
+                className="h-full bg-blue-500 rounded-full transition-all duration-700"
                 style={{ width: `${shipment.progressPercent ?? 0}%` }}
               />
             </div>
-            <div className="flex justify-between mt-1.5 text-[8px] font-mono text-slate-600">
+            <div className="flex justify-between mt-1.5 text-[8px] font-mono text-muted-foreground">
               <span>{shipment.currentHub}</span>
               <span>{shipment.destinationHub}</span>
             </div>
           </div>
 
           {/* Operator */}
-          <div className="p-4 rounded-xl border border-[#1e293b] bg-[#0f172a]">
-            <p className="text-[9px] font-mono tracking-widest text-slate-500 uppercase mb-3">Assigned Operator</p>
+          <div className="p-4 rounded-xl border border-border bg-muted/50">
+            <p className="text-[9px] font-mono tracking-widest text-muted-foreground uppercase mb-3">Assigned Operator</p>
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-bold">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm font-bold">
                 {hashOp(shipment.shipmentId).split(" ").map(n => n[0]).join("")}
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">{hashOp(shipment.shipmentId)}</p>
-                <p className="text-[10px] font-mono text-slate-500">ops-{shipment.shipmentId?.slice(0, 6).toLowerCase()}@skylink.net</p>
+                <p className="text-sm font-semibold text-foreground">{hashOp(shipment.shipmentId)}</p>
+                <p className="text-[10px] font-mono text-muted-foreground">ops-{shipment.shipmentId?.slice(0, 6).toLowerCase()}@skylink.net</p>
               </div>
             </div>
             {shipment.consumerName && (
-              <div className="mt-3 pt-3 border-t border-[#1e293b]">
+              <div className="mt-3 pt-3 border-t border-border">
                 <div className="flex items-center gap-2">
-                  <User className="w-3.5 h-3.5 text-slate-500" />
+                  <User className="w-3.5 h-3.5 text-muted-foreground" />
                   <div>
-                    <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Consignee</p>
-                    <p className="text-xs font-semibold text-slate-200 mt-0.5">{shipment.consumerName}</p>
-                    {shipment.deliveryAddress && <p className="text-[10px] text-slate-500 font-mono mt-0.5 truncate">{shipment.deliveryAddress}</p>}
+                    <p className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Consignee</p>
+                    <p className="text-xs font-semibold text-foreground mt-0.5">{shipment.consumerName}</p>
+                    {shipment.deliveryAddress && <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">{shipment.deliveryAddress}</p>}
                   </div>
                 </div>
               </div>
             )}
             {shipment.shipName && (
-              <div className="mt-3 pt-3 border-t border-[#1e293b] flex items-center gap-2">
+              <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
                 <Ship className="w-3.5 h-3.5 text-blue-400" />
                 <div>
-                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Vessel</span>
+                  <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Vessel</span>
                   <p className="text-xs font-semibold text-blue-400 mt-0.5">{shipment.shipName}</p>
                 </div>
               </div>
@@ -169,12 +163,12 @@ function ContainerDetailDrawer({ shipment, onClose }: { shipment: ApiShipment | 
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-[#1e293b] bg-[#050b14] flex items-center justify-between shrink-0">
+        <div className="px-5 py-3 border-t border-border bg-muted/50 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 maritime-glow" />
-            <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest">SkyLink Cargo Authority</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 maritime-glow" />
+            <span className="text-[8px] font-mono text-muted-foreground uppercase tracking-widest">SkyLink Cargo Authority</span>
           </div>
-          <button onClick={onClose} className="h-7 px-3 rounded text-xs font-mono text-slate-400 hover:text-white border border-[#1e293b] hover:border-cyan-500/30 transition-all">
+          <button onClick={onClose} className="h-7 px-3 rounded text-xs font-mono text-muted-foreground hover:text-foreground border border-border hover:border-blue-400/50 transition-all">
             Close
           </button>
         </div>
@@ -187,16 +181,16 @@ function DetailCell({ icon: Icon, label, value, mono, full, accent }: {
   icon: React.ElementType; label: string; value: string; mono?: boolean; full?: boolean; accent?: boolean
 }) {
   return (
-    <div className={cn("p-3 rounded-lg border border-[#1e293b] bg-[#0f172a]", full && "col-span-2")}>
+    <div className={cn("p-3 rounded-lg border border-border bg-muted/50", full && "col-span-2")}>
       <div className="flex items-center gap-1.5 mb-1.5">
-        <Icon className="w-3 h-3 text-slate-500" />
-        <span className="text-[9px] font-mono tracking-widest text-slate-500 uppercase">{label}</span>
+        <Icon className="w-3 h-3 text-muted-foreground" />
+        <span className="text-[9px] font-mono tracking-widest text-muted-foreground uppercase">{label}</span>
       </div>
       <p className={cn(
         "text-sm font-semibold truncate",
-        accent ? "text-cyan-400 font-mono text-lg" :
-          mono ? "text-cyan-300 font-mono" :
-            "text-white"
+        accent ? "text-blue-400 font-mono text-lg" :
+          mono ? "text-blue-400 font-mono" :
+            "text-foreground"
       )}>{value}</p>
     </div>
   )
@@ -239,11 +233,11 @@ export function ShipmentsView({ shipments: apiShipments }: { shipments: ApiShipm
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <Container className="w-5 h-5 text-cyan-400" />
+        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <Container className="w-5 h-5 text-blue-400" />
           Container Inventory
         </h1>
-        <p className="text-[10px] font-mono tracking-widest text-slate-500 mt-0.5 uppercase">
+        <p className="text-[10px] font-mono tracking-widest text-muted-foreground mt-0.5 uppercase">
           Live Cargo Registry — {apiShipments.length} Entries · Click Row for Deep-Dive
         </p>
       </div>
@@ -251,15 +245,15 @@ export function ShipmentsView({ shipments: apiShipments }: { shipments: ApiShipm
       {/* Mini stats */}
       <div className="grid grid-cols-5 gap-2">
         {[
-          { label: "Total", value: stats.total, color: "text-white" },
+          { label: "Total", value: stats.total, color: "text-foreground" },
           { label: "Underway", value: stats.transit, color: "text-blue-400" },
           { label: "Delivered", value: stats.delivered, color: "text-emerald-400" },
-          { label: "Queued", value: stats.queued, color: "text-slate-400" },
+          { label: "Queued", value: stats.queued, color: "text-muted-foreground" },
           { label: "Issues", value: stats.delayed, color: "text-red-400" },
         ].map(s => (
-          <div key={s.label} className="p-3 rounded-lg bg-[#0f172a] border border-[#1e293b] text-center">
+          <div key={s.label} className="p-3 rounded-lg bg-card border border-border text-center">
             <p className={cn("text-xl font-bold font-mono", s.color)}>{s.value}</p>
-            <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5 font-mono">{s.label}</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-widest mt-0.5 font-mono">{s.label}</p>
           </div>
         ))}
       </div>
@@ -267,10 +261,10 @@ export function ShipmentsView({ shipments: apiShipments }: { shipments: ApiShipm
       {/* Search + Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             placeholder="Container ID, Label, Hub, Consignee…"
-            className="pl-9 h-9 text-xs bg-[#0f172a] border-[#1e293b] font-mono focus:border-cyan-500/40 placeholder:text-slate-600"
+            className="pl-9 h-9 text-xs bg-muted/50 border-border font-mono focus:border-blue-400/50 placeholder:text-muted-foreground text-foreground"
             value={searchQuery}
             onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1) }}
           />
@@ -281,8 +275,8 @@ export function ShipmentsView({ shipments: apiShipments }: { shipments: ApiShipm
               className={cn(
                 "h-8 px-2.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider transition-all",
                 statusFilter === s
-                  ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
-                  : "text-slate-500 border border-[#1e293b] hover:border-slate-600 hover:text-slate-300"
+                  ? "bg-blue-500 text-white border border-blue-600"
+                  : "text-muted-foreground border border-border hover:border-blue-400/50 hover:text-foreground"
               )}>
               {s === "all" ? "All" : s === "IN_QUEUE" ? "Queued" : s === "SHELTERING" ? "Storm" : s.charAt(0) + s.slice(1).toLowerCase()}
             </button>
@@ -291,19 +285,19 @@ export function ShipmentsView({ shipments: apiShipments }: { shipments: ApiShipm
       </div>
 
       {/* Data Table */}
-      <div className="rounded-lg border border-[#1e293b] overflow-hidden">
+      <div className="rounded-lg border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#0a1628] border-b border-[#1e293b]">
+              <tr className="bg-muted/50 border-b border-border">
                 {["#", "Container ID", "Cargo Label", "Route", "TEU Type", "Weight", "Progress", "Status", "ETA"].map(col => (
-                  <th key={col} className="text-left px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest text-slate-500 font-mono whitespace-nowrap">
+                  <th key={col} className="text-left px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground font-mono whitespace-nowrap">
                     {col}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1e293b]">
+            <tbody className="divide-y divide-border">
               {paged.map((s, i) => {
                 const cfg = STATUS_MAP[s.status] || STATUS_MAP["IN_QUEUE"]
                 const SIcon = cfg.icon
@@ -312,31 +306,31 @@ export function ShipmentsView({ shipments: apiShipments }: { shipments: ApiShipm
                   <tr
                     key={s.shipmentId}
                     onClick={() => setSelectedContainer(s)}
-                    className="hover:bg-[#0f172a]/80 hover:border-l-2 hover:border-cyan-500/50 transition-all group cursor-pointer"
+                    className="hover:bg-muted/40 hover:border-l-2 hover:border-blue-500 transition-all group cursor-pointer"
                   >
-                    <td className="px-3 py-2 text-[9px] font-mono text-slate-600">{String(rowIdx).padStart(3, "0")}</td>
+                    <td className="px-3 py-2 text-[9px] font-mono text-muted-foreground">{String(rowIdx).padStart(3, "0")}</td>
                     <td className="px-3 py-2">
-                      <span className="font-mono text-[11px] text-cyan-400">{s.containerId || "—"}</span>
+                      <span className="font-mono text-[11px] text-blue-400">{s.containerId || "—"}</span>
                     </td>
                     <td className="px-3 py-2">
-                      <p className="text-xs font-medium text-white truncate max-w-[130px]">{s.label}</p>
-                      <p className="text-[9px] font-mono text-slate-600 truncate max-w-[130px]">{s.shipmentId?.slice(0, 10)}…</p>
+                      <p className="text-xs font-medium text-foreground truncate max-w-[130px]">{s.label}</p>
+                      <p className="text-[9px] font-mono text-muted-foreground truncate max-w-[130px]">{s.shipmentId?.slice(0, 10)}…</p>
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-1 font-mono text-[10px]">
-                        <span className="text-slate-400">{s.currentHub}</span>
-                        <ArrowRight className="w-2.5 h-2.5 text-cyan-700 shrink-0" />
-                        <span className="text-slate-300">{s.destinationHub}</span>
+                        <span className="text-muted-foreground">{s.currentHub}</span>
+                        <ArrowRight className="w-2.5 h-2.5 text-blue-400 shrink-0" />
+                        <span className="text-foreground/80">{s.destinationHub}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2"><span className="text-[9px] font-mono text-slate-400">{hashTEU(s.shipmentId)}</span></td>
-                    <td className="px-3 py-2"><span className="text-[9px] font-mono text-slate-400">{hashWeight(s.shipmentId)}</span></td>
+                    <td className="px-3 py-2"><span className="text-[9px] font-mono text-muted-foreground">{hashTEU(s.shipmentId)}</span></td>
+                    <td className="px-3 py-2"><span className="text-[9px] font-mono text-muted-foreground">{hashWeight(s.shipmentId)}</span></td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2 min-w-[80px]">
-                        <div className="flex-1 h-1 bg-[#1e293b] rounded-full overflow-hidden">
-                          <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${s.progressPercent ?? 0}%` }} />
+                        <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${s.progressPercent ?? 0}%` }} />
                         </div>
-                        <span className="text-[9px] font-mono text-slate-400 w-7 text-right">{s.progressPercent ?? 0}%</span>
+                        <span className="text-[9px] font-mono text-muted-foreground w-7 text-right">{s.progressPercent ?? 0}%</span>
                       </div>
                     </td>
                     <td className="px-3 py-2">
@@ -345,7 +339,7 @@ export function ShipmentsView({ shipments: apiShipments }: { shipments: ApiShipm
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <span className="text-[9px] font-mono text-slate-500">
+                      <span className="text-[9px] font-mono text-muted-foreground">
                         {s.estimatedArrival
                           ? new Date(s.estimatedArrival).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                           : "—"}
@@ -355,24 +349,24 @@ export function ShipmentsView({ shipments: apiShipments }: { shipments: ApiShipm
                 )
               })}
               {paged.length === 0 && (
-                <tr><td colSpan={9} className="py-12 text-center text-slate-500 font-mono text-xs tracking-widest uppercase">No Containers Match Current Filters</td></tr>
+                <tr><td colSpan={9} className="py-12 text-center text-muted-foreground font-mono text-xs tracking-widest uppercase">No Containers Match Current Filters</td></tr>
               )}
             </tbody>
           </table>
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#1e293b] bg-[#0a1628]">
-            <p className="text-[9px] font-mono text-slate-500 tracking-wider uppercase">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
+            <p className="text-[9px] font-mono text-muted-foreground tracking-wider uppercase">
               Rows {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}
             </p>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-7 w-7 border-[#1e293b] bg-transparent text-slate-500 hover:text-white"
+              <Button variant="outline" size="icon" className="h-7 w-7 border-border bg-transparent text-muted-foreground hover:text-foreground"
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                 <ChevronLeft className="w-3.5 h-3.5" />
               </Button>
-              <span className="text-[9px] font-mono text-slate-400 px-2">PAGE {currentPage}/{totalPages}</span>
-              <Button variant="outline" size="icon" className="h-7 w-7 border-[#1e293b] bg-transparent text-slate-500 hover:text-white"
+              <span className="text-[9px] font-mono text-muted-foreground px-2">PAGE {currentPage}/{totalPages}</span>
+              <Button variant="outline" size="icon" className="h-7 w-7 border-border bg-transparent text-muted-foreground hover:text-foreground"
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Button>

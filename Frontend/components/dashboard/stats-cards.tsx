@@ -67,10 +67,10 @@ export function StatsCards({ onFilterClick, activeFilter, stats }: StatsCardsPro
           <Card
             key={stat.title}
             className={cn(
-              "group cursor-pointer transition-all duration-300 bg-card/80 backdrop-blur-sm",
+              "group cursor-pointer transition-all duration-300 bg-card border-border",
               isActive
-                ? "border-cyan-500/50 bg-cyan-500/5 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                : `hover:${stat.borderColor} hover:shadow-[0_0_10px_rgba(6,182,212,0.1)]`
+                ? "border-sky-400/50 shadow-[0_0_16px_rgba(56,189,248,0.1)]"
+                : `hover:${stat.borderColor} hover:shadow-[0_0_10px_rgba(56,189,248,0.06)]`
             )}
             onClick={() => onFilterClick(stat.filterId === activeFilter ? null : stat.filterId)}
           >
@@ -80,7 +80,7 @@ export function StatsCards({ onFilterClick, activeFilter, stats }: StatsCardsPro
                   <Icon className={`w-5 h-5 ${stat.iconColor}`} />
                 </div>
                 {isActive && (
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 maritime-glow" />
+                  <div className="w-2 h-2 rounded-full bg-sky-400 maritime-glow" />
                 )}
               </div>
               <div className="mt-4">
@@ -88,8 +88,8 @@ export function StatsCards({ onFilterClick, activeFilter, stats }: StatsCardsPro
                 <p className="text-sm text-muted-foreground mt-1">{stat.title}</p>
               </div>
               {isActive && (
-                <div className="mt-3 pt-3 border-t border-cyan-500/20">
-                  <p className="text-xs text-cyan-400 font-mono uppercase">Click to clear filter</p>
+                <div className="mt-3 pt-3 border-t border-sky-400/20">
+                  <p className="text-xs text-sky-400 font-mono uppercase">Click to clear filter</p>
                 </div>
               )}
             </CardContent>

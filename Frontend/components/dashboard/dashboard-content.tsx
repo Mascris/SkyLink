@@ -153,10 +153,10 @@ export default function DashboardContent() {
                     </div>
                     {/* Floating search overlay */}
                     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-80">
-                        <div className="bg-[#050b14]/90 backdrop-blur-md rounded-lg border border-cyan-500/20 px-3 py-2 flex items-center gap-2 shadow-xl">
-                            <div className="w-2 h-2 bg-cyan-400 rounded-full maritime-glow shrink-0" />
-                            <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Live Global Radar</span>
-                            <span className="ml-auto text-[9px] font-mono text-slate-600">{shipments.length} vessels tracked</span>
+                        <div className="bg-[#111d35]/90 backdrop-blur-md rounded-lg border border-[#1e3050] px-3 py-2 flex items-center gap-2 shadow-xl">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full maritime-glow shrink-0" />
+                            <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">Live Global Radar</span>
+                            <span className="ml-auto text-[9px] font-mono text-slate-500">{shipments.length} vessels tracked</span>
                         </div>
                     </div>
                     <TrackingView shipments={shipments} hubs={hubs} />
@@ -197,7 +197,7 @@ export default function DashboardContent() {
     }
 
     return (
-        <div className="flex h-screen bg-[#050b14] text-foreground overflow-hidden">
+        <div className="flex h-screen bg-[#0d1526] text-foreground overflow-hidden">
             <Sidebar
                 activeView={activeView}
                 onViewChange={(v) => { setActiveView(v); setStatusFilter(null) }}
@@ -217,18 +217,18 @@ export default function DashboardContent() {
                 />
 
                 <main className={`flex-1 min-h-0 ${activeView === "overview"
-                        ? "overflow-hidden p-4"
-                        : activeView === "tracking"
-                            ? "overflow-auto p-0"
-                            : "overflow-auto p-5"
+                    ? "overflow-hidden p-4"
+                    : activeView === "tracking"
+                        ? "overflow-auto p-0"
+                        : "overflow-auto p-5"
                     } relative`}>
                     {renderMain()}
 
                     {/* Live indicator */}
                     {!loading && activeView !== "tracking" && (
-                        <div className="fixed bottom-4 right-4 z-30 bg-[#050b14]/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-cyan-500/20 flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
-                            <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-tighter">Radar Link Active</span>
+                        <div className="fixed bottom-4 right-4 z-30 bg-[#111d35]/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-[#1e3050] flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+                            <span className="text-[9px] font-mono text-blue-400 uppercase tracking-tighter">Radar Link Active</span>
                         </div>
                     )}
                 </main>

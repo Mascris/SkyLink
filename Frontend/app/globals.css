@@ -2,92 +2,147 @@
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
-/* ═══════════════════════════════════════════════════════════════════════
-   MARITIME RADAR COMMAND CENTER — SkyLink Design System v2
-   ═══════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   NAUTICAL MIDNIGHT — SkyLink v5
+   Palette: Deep Charcoal Navy + Sky Blue + Emerald
+   ═══════════════════════════════════════════════════════════ */
 
 :root {
-  --background: #050b14;
-  --foreground: #e2e8f0;
-  --card: #0f172a;
-  --card-foreground: #e2e8f0;
-  --popover: #0f172a;
-  --popover-foreground: #e2e8f0;
-  --primary: #06b6d4;
-  --primary-foreground: #050b14;
-  --secondary: #1e293b;
-  --secondary-foreground: #cbd5e1;
-  --muted: #1e293b;
-  --muted-foreground: #64748b;
-  --accent: #06b6d4;
-  --accent-foreground: #050b14;
-  --destructive: #ef4444;
-  --destructive-foreground: #e2e8f0;
-  --border: #1e293b;
-  --input: #0f172a;
-  --ring: #06b6d4;
-  --chart-1: #06b6d4;
-  --chart-2: #3b82f6;
-  --chart-3: #f59e0b;
-  --chart-4: #10b981;
-  --chart-5: #8b5cf6;
+  /* Backgrounds */
+  --background: #0e1621;
+  --card: #152030;
+  --secondary: #192438;
+  --muted: #192438;
+
+  /* Borders */
+  --border: #1e3048;
+  --input: #192438;
+
+  /* Text */
+  --foreground: #dde5f0;
+  --card-foreground: #dde5f0;
+  --muted-foreground: #6b7f9a;
+
+  /* Accent — Sky Blue */
+  --primary: #38bdf8;
+  --primary-foreground: #0e1621;
+  --accent: #38bdf8;
+  --accent-foreground: #0e1621;
+
+  /* Semantic */
+  --destructive: #f87171;
+  --ring: #38bdf8;
   --radius: 0.5rem;
-  --sidebar: #030712;
-  --sidebar-foreground: #e2e8f0;
-  --sidebar-primary: #06b6d4;
-  --sidebar-primary-foreground: #050b14;
-  --sidebar-accent: #0f172a;
-  --sidebar-accent-foreground: #e2e8f0;
-  --sidebar-border: #1e293b;
-  --sidebar-ring: #06b6d4;
-  --success: #10b981;
-  --success-foreground: #050b14;
-  --warning: #f59e0b;
-  --warning-foreground: #050b14;
-  --info: #3b82f6;
-  --info-foreground: #e2e8f0;
+
+  /* Charts */
+  --chart-1: #38bdf8;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #fb923c;
+
+  /* Sidebar */
+  --sidebar: #0b1220;
+  --sidebar-foreground: #dde5f0;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #0e1621;
+  --sidebar-accent: #192438;
+  --sidebar-accent-foreground: #9ab0c9;
+  --sidebar-border: #1e3048;
+  --sidebar-ring: #38bdf8;
+  --popover: #152030;
+  --popover-foreground: #dde5f0;
+  --success: #34d399;
+  --success-foreground: #0e1621;
+  --warning: #fbbf24;
+  --warning-foreground: #0e1621;
+
+  --secondary-foreground: #9ab0c9;
 }
 
 .dark {
-  --background: #050b14;
-  --foreground: #e2e8f0;
-  --card: #0f172a;
-  --card-foreground: #e2e8f0;
-  --popover: #0f172a;
-  --popover-foreground: #e2e8f0;
-  --primary: #06b6d4;
-  --primary-foreground: #050b14;
-  --secondary: #1e293b;
-  --secondary-foreground: #cbd5e1;
-  --muted: #1e293b;
-  --muted-foreground: #64748b;
-  --accent: #06b6d4;
-  --accent-foreground: #050b14;
-  --destructive: #ef4444;
-  --destructive-foreground: #e2e8f0;
-  --border: #1e293b;
-  --input: #0f172a;
-  --ring: #06b6d4;
-  --chart-1: #06b6d4;
-  --chart-2: #3b82f6;
-  --chart-3: #f59e0b;
-  --chart-4: #10b981;
-  --chart-5: #8b5cf6;
-  --sidebar: #030712;
-  --sidebar-foreground: #e2e8f0;
-  --sidebar-primary: #06b6d4;
-  --sidebar-primary-foreground: #050b14;
-  --sidebar-accent: #0f172a;
-  --sidebar-accent-foreground: #e2e8f0;
-  --sidebar-border: #1e293b;
-  --sidebar-ring: #06b6d4;
-  --success: #10b981;
-  --success-foreground: #050b14;
-  --warning: #f59e0b;
-  --warning-foreground: #050b14;
-  --info: #3b82f6;
-  --info-foreground: #e2e8f0;
+  --background: #0e1621;
+  --card: #152030;
+  --secondary: #192438;
+  --muted: #192438;
+  --border: #1e3048;
+  --input: #192438;
+  --foreground: #dde5f0;
+  --card-foreground: #dde5f0;
+  --muted-foreground: #6b7f9a;
+  --primary: #38bdf8;
+  --primary-foreground: #0e1621;
+  --accent: #38bdf8;
+  --accent-foreground: #0e1621;
+  --destructive: #f87171;
+  --ring: #38bdf8;
+  --sidebar: #0b1220;
+  --sidebar-foreground: #dde5f0;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #0e1621;
+  --sidebar-accent: #192438;
+  --sidebar-accent-foreground: #9ab0c9;
+  --sidebar-border: #1e3048;
+  --sidebar-ring: #38bdf8;
+  --popover: #152030;
+  --popover-foreground: #dde5f0;
+  --secondary-foreground: #9ab0c9;
+}
+
+/* ── Light Mode ───────────────────────────────────────── */
+.light {
+  /* Backgrounds */
+  --background: #f0f4f8;
+  --card: #ffffff;
+  --secondary: #e8eef5;
+  --muted: #e2eaf3;
+
+  /* Borders */
+  --border: #c8d8ea;
+  --input: #e2eaf3;
+
+  /* Text */
+  --foreground: #0f1f33;
+  --card-foreground: #0f1f33;
+  --muted-foreground: #5a7390;
+
+  /* Accent — Sky Blue */
+  --primary: #0369a1;
+  --primary-foreground: #ffffff;
+  --accent: #0369a1;
+  --accent-foreground: #ffffff;
+
+  /* Semantic */
+  --destructive: #dc2626;
+  --ring: #0369a1;
+
+  /* Charts */
+  --chart-1: #0369a1;
+  --chart-2: #059669;
+  --chart-3: #d97706;
+  --chart-4: #7c3aed;
+  --chart-5: #ea580c;
+
+  /* Sidebar */
+  --sidebar: #1a2d45;
+  --sidebar-foreground: #dde5f0;
+  --sidebar-primary: #38bdf8;
+  --sidebar-primary-foreground: #0e1621;
+  --sidebar-accent: #243c59;
+  --sidebar-accent-foreground: #9ab0c9;
+  --sidebar-border: #1e3048;
+  --sidebar-ring: #38bdf8;
+  --popover: #ffffff;
+  --popover-foreground: #0f1f33;
+  --secondary-foreground: #2e4a68;
+
+  /* Status palette (light overrides) */
+  --success: #059669;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
 }
 
 @theme inline {
@@ -108,7 +163,6 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -129,12 +183,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
 }
 
 @layer base {
@@ -144,8 +192,20 @@
 
   html,
   body {
-    background-color: #050b14 !important;
-    color: #e2e8f0;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  html.dark,
+  html.dark body {
+    background-color: #0e1621;
+    color: #dde5f0;
+  }
+
+  html.light,
+  html.light body {
+    background-color: #f0f4f8;
+    color: #0f1f33;
   }
 
   body {
@@ -154,18 +214,16 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   MARITIME ANIMATIONS
-   ═══════════════════════════════════════════════════════════════════════ */
+/* ── Animations ─────────────────────────────────────── */
 @keyframes radar-pulse {
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4);
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.2);
   }
 
   50% {
-    box-shadow: 0 0 12px 4px rgba(6, 182, 212, 0.2);
+    box-shadow: 0 0 10px 4px rgba(56, 189, 248, 0.1);
   }
 }
 
@@ -173,24 +231,24 @@
 
   0%,
   100% {
-    box-shadow: 0 0 4px 2px rgba(245, 158, 11, 0.6);
-    background-color: #f59e0b;
+    box-shadow: 0 0 4px 2px rgba(251, 191, 36, 0.5);
+    background-color: #fbbf24;
   }
 
   50% {
-    box-shadow: 0 0 12px 6px rgba(239, 68, 68, 0.8);
-    background-color: #ef4444;
+    box-shadow: 0 0 10px 5px rgba(248, 113, 113, 0.5);
+    background-color: #f87171;
   }
 }
 
-@keyframes sonar-sweep {
+@keyframes sonar-ping {
   0% {
     transform: scale(1);
-    opacity: 0.6;
+    opacity: 0.7;
   }
 
   100% {
-    transform: scale(2.5);
+    transform: scale(3.5);
     opacity: 0;
   }
 }
@@ -215,25 +273,8 @@
   animation: storm-pulse 1s ease-in-out infinite;
 }
 
-.sonar-ring {
-  animation: sonar-sweep 2s ease-out infinite;
-}
-
 .manifest-panel {
   animation: manifest-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* ── Focused vessel sonar ping — 3 expanding rings ─────────────────── */
-@keyframes sonar-ping {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: scale(3.5);
-    opacity: 0;
-  }
 }
 
 .focused-ship-marker {
@@ -247,7 +288,7 @@
   position: absolute;
   inset: -2px;
   border-radius: 50%;
-  border: 1.5px solid #06b6d4;
+  border: 1.5px solid #38bdf8;
   animation: sonar-ping 2s ease-out infinite;
   pointer-events: none;
 }
@@ -260,42 +301,42 @@
   animation-delay: 1.3s;
 }
 
-/* Leaflet popup overrides — Maritime theme */
+/* ── Leaflet popup overrides ─────────────────────────── */
 .leaflet-popup-content-wrapper {
-  background: #0f172a !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #1e293b !important;
+  background: #152030 !important;
+  color: #dde5f0 !important;
+  border: 1px solid #1e3048 !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
 }
 
 .leaflet-popup-tip {
-  background: #0f172a !important;
+  background: #152030 !important;
 }
 
 .leaflet-popup-content {
-  color: #e2e8f0 !important;
+  color: #dde5f0 !important;
 }
 
 .leaflet-popup-content p {
   margin: 4px 0 !important;
 }
 
-/* Thin scrollbar */
+/* ── Scrollbar ───────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #050b14;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--border);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--muted-foreground);
 }

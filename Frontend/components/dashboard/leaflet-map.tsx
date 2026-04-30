@@ -27,20 +27,20 @@ const MAX_MAP_SHIPMENTS = 50
 /** Tiny hub dot — shown only in isolation mode to avoid clutter */
 const hubDotIcon = new L.DivIcon({
     className: "",
-    html: `<div style="width:10px;height:10px;border-radius:50%;background:#06b6d4;box-shadow:0 0 6px rgba(6,182,212,0.7);border:1.5px solid #0f172a"></div>`,
+    html: `<div style="width:10px;height:10px;border-radius:50%;background:#38bdf8;box-shadow:0 0 6px rgba(56,189,248,0.5);border:1.5px solid #0e1621"></div>`,
     iconSize: [10, 10], iconAnchor: [5, 5],
 })
 
 const destDotIcon = new L.DivIcon({
     className: "",
-    html: `<div style="width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 6px rgba(16,185,129,0.7);border:1.5px solid #0f172a"></div>`,
+    html: `<div style="width:10px;height:10px;border-radius:50%;background:#34d399;box-shadow:0 0 6px rgba(52,211,153,0.5);border:1.5px solid #0e1621"></div>`,
     iconSize: [10, 10], iconAnchor: [5, 5],
 })
 
 const shipIcon = new L.DivIcon({
     className: "",
-    html: `<div style="width:20px;height:20px;background:#050b14;border:1.5px solid #3b82f6;border-radius:5px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px rgba(59,130,246,0.5)">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round">
+    html: `<div style="width:20px;height:20px;background:#152030;border:1.5px solid #38bdf8;border-radius:5px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px rgba(56,189,248,0.35)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round">
         <path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
         <path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/>
         <path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/>
@@ -53,9 +53,9 @@ const shipIcon = new L.DivIcon({
 const focusedShipIcon = new L.DivIcon({
     className: "focused-ship-marker",
     html: `<div style="position:relative;width:28px;height:28px">
-      <div class="ping-ring" style="position:absolute;inset:-2px;border-radius:50%;border:1.5px solid #06b6d4;"></div>
-      <div style="position:absolute;inset:3px;background:#050b14;border:2px solid #06b6d4;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(6,182,212,0.7)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round">
+      <div class="ping-ring" style="position:absolute;inset:-2px;border-radius:50%;border:1.5px solid #38bdf8;"></div>
+      <div style="position:absolute;inset:3px;background:#152030;border:2px solid #38bdf8;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(56,189,248,0.45)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round">
           <path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
           <path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/>
           <path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/>
@@ -68,9 +68,9 @@ const focusedShipIcon = new L.DivIcon({
 const shelteringIcon = new L.DivIcon({
     className: "",
     html: `<div style="position:relative;width:24px;height:24px">
-      <div style="position:absolute;inset:0;background:rgba(245,158,11,0.2);border-radius:50%;animation:storm-pulse 1s ease-in-out infinite"></div>
-      <div style="position:absolute;inset:3px;background:#1c1917;border:1.5px solid #f59e0b;border-radius:5px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(245,158,11,0.6)">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round">
+      <div style="position:absolute;inset:0;background:rgba(251,191,36,0.15);border-radius:50%;animation:storm-pulse 1s ease-in-out infinite"></div>
+      <div style="position:absolute;inset:3px;background:#152030;border:1.5px solid #fbbf24;border-radius:5px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(251,191,36,0.4)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round">
           <path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
           <path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/>
           <path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/>
@@ -343,10 +343,10 @@ export default function LeafletMap({ shipments, hubs, focusedShipmentId }: Leafl
                     icon={role === "destination" ? destDotIcon : hubDotIcon}
                 >
                     <Popup>
-                        <p className="font-mono text-[11px] font-semibold" style={{ color: "#06b6d4" }}>
+                        <p className="font-mono text-[11px] font-semibold" style={{ color: "#38bdf8" }}>
                             {hub.city}, {hub.country}
                         </p>
-                        <p className="font-mono text-[10px]" style={{ color: "#64748b" }}>{hub.hubCode}</p>
+                        <p className="font-mono text-[10px]" style={{ color: "#6b7f9a" }}>{hub.hubCode}</p>
                     </Popup>
                 </Marker>
             ))}
@@ -359,12 +359,12 @@ export default function LeafletMap({ shipments, hubs, focusedShipmentId }: Leafl
                 return (
                     <Marker key={`ship-${m.id}`} position={[m.lat, m.lng]} icon={icon}>
                         <Popup>
-                            <p className="font-mono font-semibold" style={{ color: isFocused ? "#06b6d4" : m.status === "SHELTERING" ? "#f59e0b" : "#3b82f6" }}>
+                            <p className="font-mono font-semibold" style={{ color: isFocused ? "#38bdf8" : m.status === "SHELTERING" ? "#fbbf24" : "#38bdf8" }}>
                                 {isFocused ? "◉ " : ""}{m.label}
                             </p>
-                            <p className="font-mono text-[10px]" style={{ color: "#64748b" }}>{m.from} → {m.to}</p>
-                            <p className="font-mono text-[10px]" style={{ color: "#06b6d4" }}>{m.progress}% complete</p>
-                            {isFocused && <p className="font-mono text-[10px]" style={{ color: "#f59e0b" }}>⚡ Sonar Lock Active</p>}
+                            <p className="font-mono text-[10px]" style={{ color: "#6b7f9a" }}>{m.from} → {m.to}</p>
+                            <p className="font-mono text-[10px]" style={{ color: "#38bdf8" }}>{m.progress}% complete</p>
+                            {isFocused && <p className="font-mono text-[10px]" style={{ color: "#fbbf24" }}>⚡ Sonar Lock Active</p>}
                         </Popup>
                     </Marker>
                 )
